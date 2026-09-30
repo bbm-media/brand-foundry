@@ -22,7 +22,20 @@ const PREVIOUS = path.join(ROOT, `.build-previous-${randomUUID()}`);
 function removeTemporaryBuild(directory) {
   const resolved = path.resolve(directory);
   if (path.dirname(resolved) !== ROOT || !/^\.build-(stage|previous)-[a-f0-9-]+$/.test(path.basename(resolved))) throw new Error('Refusing to remove a path outside this build workspace');
-  rmSync(resolved, { recursive: true, force: true });
+  rmSync(resolved, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+}
+// Windows briefly holds freshly written files (antivirus scans, the search
+// indexer), so renaming a directory we just wrote can fail with EPERM, EBUSY or
+// EACCES for a moment. Retry with backoff before treating it as a real failure.
+const TRANSIENT_FS_ERRORS = new Set(["EPERM", "EBUSY", "EACCES"]);
+function renameWithRetry(from, to, attempts = 10) {
+  for (let attempt = 1; ; attempt++) {
+    try { return renameSync(from, to); }
+    catch (e) {
+      if (!TRANSIENT_FS_ERRORS.has(e.code) || attempt >= attempts) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, Math.min(1000, 50 * 2 ** (attempt - 1)));
+    }
+  }
 }
 
 const dirs = (p) => (existsSync(p) ? readdirSync(p, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name) : []);
@@ -131,10 +144,10 @@ writeFileSync(path.join(STAGE, "manifest.json"), JSON.stringify({
 }, null, 2));
 
 // Publish only a complete build. Restore the old directory if promotion fails.
-if (existsSync(BUILD)) renameSync(BUILD, PREVIOUS);
-try { renameSync(STAGE, BUILD); }
+if (existsSync(BUILD)) renameWithRetry(BUILD, PREVIOUS);
+try { renameWithRetry(STAGE, BUILD); }
 catch (e) {
-  if (existsSync(PREVIOUS)) renameSync(PREVIOUS, BUILD);
+  if (existsSync(PREVIOUS)) renameWithRetry(PREVIOUS, BUILD);
   throw e;
 }
 if (existsSync(PREVIOUS)) {
@@ -151,5 +164,9 @@ for (const m of CONFIG.media) {
 if (!count) console.log("   (no templates yet. Add one under templates/<media>/<category>/)");
 console.log("");
 } finally {
-  if (existsSync(STAGE)) removeTemporaryBuild(STAGE);
+  // A cleanup failure must not replace the real error, if there is one.
+  if (existsSync(STAGE)) {
+    try { removeTemporaryBuild(STAGE); }
+    catch { console.warn(`Temporary build cleanup deferred: ${STAGE}`); }
+  }
 }
