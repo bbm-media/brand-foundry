@@ -4,13 +4,15 @@
   Same liquid spawn as goo-spawn-title, applied to a mark. The filter works on
   alpha, so any logo with a transparent background spawns correctly. Separate
   shapes show it best: they weld into one mass, then pinch apart.
-  "Solid" colors render the logo through a CSS mask filled with one color, which
-  pools into the cleanest liquid. "Original colors" filters the image itself;
-  its colors blend while it is a blob and resolve as it separates.
+  "Solid" colors recolor the logo inside the same SVG filter: a flood of one color
+  clipped to the logo's alpha. It pools into the cleanest liquid and fetches no
+  extra image, so it also works in the sandboxed live preview, where a CSS
+  mask-image fetch is blocked. "Original colors" filters the image itself; its
+  colors blend while it is a blob and resolve as it separates.
 -->
 <html data-brand-fonts
   lang="en"
-  data-composition-variables='[{"id": "logoImage", "type": "string", "group": "Content", "label": "Logo", "default": "assets/goo-sample-mark.svg", "description": "Use a PNG or SVG with a transparent background. A JPEG has no transparency, so it spawns as a rectangle."}, {"id": "logoTint", "type": "enum", "group": "Content", "label": "Logo color", "default": "accent", "options": [{"value": "accent", "label": "Solid accent"}, {"value": "text", "label": "Solid text color"}, {"value": "original", "label": "Original colors"}], "description": "Solid colors pool into the cleanest liquid. Original colors blend while the logo is a blob."}, {"id": "logoWidth", "type": "number", "group": "Content", "label": "Logo width (% of canvas)", "default": 46, "min": 10, "max": 90, "step": 1}, {"id": "tagline", "type": "string", "group": "Content", "label": "Tagline (blank hides)", "default": ""}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "spawnSeconds", "type": "number", "group": "Spawn", "label": "Spawn seconds", "default": 1.2, "min": 0.3, "max": 4, "step": 0.1, "description": "How long the mark takes to pull apart. 1.2 seconds matches the reference."}, {"id": "blurPercent", "type": "number", "group": "Spawn", "label": "Blob size (% of logo width)", "default": 11, "min": 2, "max": 40, "step": 1, "description": "Starting blur as a share of the logo width, so the effect scales with the mark. Too high and thin parts vanish before they pool."}, {"id": "edgeHardness", "type": "number", "group": "Spawn", "label": "Edge hardness", "default": 20, "min": 4, "max": 40, "step": 1, "description": "How sharply the blob edge is cut. Higher looks tighter and waxier."}, {"id": "edgeCutoff", "type": "number", "group": "Spawn", "label": "Edge cutoff", "default": -8, "min": -20, "max": -1, "step": 0.5, "description": "More negative makes the blob thinner, so shapes pinch apart sooner."}, {"id": "releasePercent", "type": "number", "group": "Spawn", "label": "Edge release (% into spawn)", "default": 66, "min": 0, "max": 95, "step": 1, "description": "When the hard edge starts relaxing back to the normal logo. Keeps the landing soft."}, {"id": "taglineDelay", "type": "number", "group": "Spawn", "label": "Tagline delay (seconds)", "default": 0.35, "min": 0, "max": 3, "step": 0.05}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+  data-composition-variables='[{"id": "logoImage", "type": "string", "group": "Content", "label": "Logo", "default": "assets/goo-sample-mark.svg", "description": "Use a PNG or SVG with a transparent background. A JPEG has no transparency, so it spawns as a rectangle."}, {"id": "logoTint", "type": "enum", "group": "Content", "label": "Logo color", "default": "original", "options": [{"value": "original", "label": "Original colors"}, {"value": "accent", "label": "Solid accent"}, {"value": "text", "label": "Solid text color"}], "description": "Original colors keeps your logo exactly as designed. Solid colors repaint the whole logo in one color, which also fills in any letters or details inside shapes."}, {"id": "logoWidth", "type": "number", "group": "Content", "label": "Logo width (% of canvas)", "default": 46, "min": 10, "max": 90, "step": 1}, {"id": "tagline", "type": "string", "group": "Content", "label": "Tagline (blank hides)", "default": ""}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9", "description": "Use the background your logo was designed for. A light or cream logo needs a dark background, or it disappears. Transparent MOV exports ignore this."}, {"id": "spawnSeconds", "type": "number", "group": "Spawn", "label": "Spawn seconds", "default": 1.2, "min": 0.3, "max": 4, "step": 0.1, "description": "How long the mark takes to pull apart. 1.2 seconds matches the reference."}, {"id": "blurPercent", "type": "number", "group": "Spawn", "label": "Blob size (% of logo width)", "default": 6, "min": 2, "max": 30, "step": 1, "description": "Starting blur as a share of the logo width. Around 6 gives hard-edged liquid. Higher starts softer and hazier, and thin parts vanish before they pool."}, {"id": "edgeHardness", "type": "number", "group": "Spawn", "label": "Edge hardness", "default": 20, "min": 4, "max": 40, "step": 1, "description": "How sharply the blob edge is cut. Higher looks tighter and waxier."}, {"id": "edgeCutoff", "type": "number", "group": "Spawn", "label": "Edge cutoff", "default": -8, "min": -20, "max": -1, "step": 0.5, "description": "More negative makes the blob thinner, so shapes pinch apart sooner."}, {"id": "releasePercent", "type": "number", "group": "Spawn", "label": "Edge release (% into spawn)", "default": 66, "min": 0, "max": 95, "step": 1, "description": "When the hard edge starts relaxing back to the normal logo. Keeps the landing soft."}, {"id": "taglineDelay", "type": "number", "group": "Spawn", "label": "Tagline delay (seconds)", "default": 0.35, "min": 0, "max": 3, "step": 0.05}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
 >
   <head>
     <meta charset="UTF-8" />
@@ -33,10 +35,9 @@
          them would defeat the alpha threshold. */
       .goo { position: relative; display: block; max-width: 100%; }
       #logo { display: block; width: 100%; height: auto; }
-      #logoMask { position: absolute; inset: 0; background: var(--accentColor);
-        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-        -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
-      #root.tinted #logo { visibility: hidden; }
+      /* Solid tint color, resolved live from the brand variables. */
+      #flood1 { flood-color: var(--accentColor); }
+      #root.tint-text #flood1 { flood-color: var(--textColor); }
       .tagline { display: block; font-family: var(--sans); font-weight: 700; font-size: 46px;
         letter-spacing: -0.01em; color: var(--textColor); text-align: center; }
       html[data-size="half"] .tagline { font-size: 38px; }
@@ -48,6 +49,8 @@
          data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
       <svg class="defs" aria-hidden="true">
         <filter id="goo1" x="-30%" y="-60%" width="160%" height="220%" color-interpolation-filters="sRGB">
+          <feFlood id="flood1" result="flood" />
+          <feComposite in="flood" in2="SourceGraphic" operator="in" result="tinted" />
           <feGaussianBlur id="blur1" in="SourceGraphic" stdDeviation="0" result="blur" />
           <feColorMatrix id="edge1" in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
         </filter>
@@ -59,7 +62,6 @@
       <section id="stage" class="stage clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1">
         <div class="goo" id="g1" style="filter: url(#goo1)">
           <img id="logo" data-var-src="logoImage" src="assets/goo-sample-mark.svg" alt="" />
-          <div id="logoMask"></div>
         </div>
         <div class="goo" id="g2" style="filter: url(#goo2)"><span class="tagline" id="tag" data-var-text="tagline"></span></div>
       </section>
@@ -76,16 +78,11 @@
       const g1 = document.getElementById("g1");
       g1.style.width = logoPx + "px";
 
-      const src = String(vars.logoImage ?? "").trim() || "assets/goo-sample-mark.svg";
-      const tint = ["accent", "text", "original"].includes(vars.logoTint) ? vars.logoTint : "accent";
-      const mask = document.getElementById("logoMask");
-      if (tint === "original") mask.remove();
-      else {
-        root.classList.add("tinted");
-        const url = `url("${src.replace(/["\\]/g, encodeURIComponent)}")`;
-        mask.style.webkitMaskImage = url;
-        mask.style.maskImage = url;
-        if (tint === "text") mask.style.background = "var(--textColor)";
+      const tint = ["accent", "text", "original"].includes(vars.logoTint) ? vars.logoTint : "original";
+      // Solid tints blur the flood-filled copy instead of the image itself.
+      if (tint !== "original") {
+        document.getElementById("blur1").setAttribute("in", "tinted");
+        if (tint === "text") root.classList.add("tint-text");
       }
       if (String(vars.tagline ?? "").trim() === "") document.getElementById("g2").remove();
 
@@ -97,7 +94,7 @@
       const cutoff = clamp(vars.edgeCutoff, -8, -20, -1);
       const release = clamp(vars.releasePercent, 66, 0, 95) / 100;
       const matrix = (a, o) => `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${a} ${o}`;
-      const logoBlur = logoPx * clamp(vars.blurPercent, 11, 2, 40) / 100;
+      const logoBlur = logoPx * clamp(vars.blurPercent, 6, 2, 30) / 100;
       const tag = document.getElementById("tag");
       const tagBlur = tag ? parseFloat(getComputedStyle(tag).fontSize) * .33 : 0;
 
