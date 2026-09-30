@@ -89,6 +89,22 @@ templates first; **Brand Settings** is always one click away.
   <img src="docs/media/editor.png" alt="The editor: a logo template preview on the left and a compact panel of content, brand, spawn and timing controls on the right" width="880">
 </p>
 
+## Why this exists
+
+I'm a content creator who learned the tech. There are plenty of technical people who understand content, but not many creatives who understand the tech, and I kept hitting the same wall.
+
+Generative tools like Higgsfield and Magnific are amazing, but they're non-deterministic. Every generation comes out a little different. You re-prompt, add guidelines, and still can't recreate last week's asset exactly. You never have full control.
+
+Then Remotion, and later HyperFrames, turned video into HTML, CSS and JavaScript. If motion graphics are code, anything a website can show can become an asset, and the same input gives you the same output every time.
+
+Creators already live in asset libraries: Artlist, Envato Elements, Storyblocks. But when it comes to valuing a media company, key-man risk is real. If everything lives in one person and a stock subscription, there isn't much to value. You shoot your own B-roll; you should make your own assets too, and own a library that's unique to you. Generation credits aren't free either. They're subsidized right now, and nobody knows what they'll cost later. A template you own costs nothing to render again.
+
+The last piece is the agents. With Claude Code or Codex driving Premiere Pro and DaVinci Resolve, you can direct an edit by voice. You shoot the creative, your agent fills the templates, and the overlays land on the timeline. Brand Foundry is the asset layer for that.
+
+Building this blew my mind. I hope it does the same for you.
+
+[Payton Kaleiwahea](https://github.com/paytkaleiwahea)
+
 ## Included templates
 
 | Media | Template | Exports |
