@@ -4,7 +4,8 @@ description: Make branded images, carousels, stat cards, lower thirds, logo reve
 license: MIT
 compatibility: Runs a local Brand Foundry server. Needs Node.js 22+, Chrome for PNG export, and FFmpeg for video. The agent needs a terminal and access to localhost.
 metadata:
-  author: Business Based Media
+  author: Payton Kaleiwahea
+  publisher: Business Based Media
   version: "1.0.0"
   homepage: https://github.com/bbm-media/brand-foundry
 ---

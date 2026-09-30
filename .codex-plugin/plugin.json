@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Templates your AI agents fill. Branded images, carousels, stat cards, logo reveals and video overlays, rendered on your machine to PNG, MP4 or transparent MOV.",
   "author": {
-    "name": "Business Based Media",
-    "url": "https://bbm.media"
+    "name": "Payton Kaleiwahea",
+    "url": "https://x.com/paytkaleiwahea"
   },
   "homepage": "https://github.com/bbm-media/brand-foundry",
   "repository": "https://github.com/bbm-media/brand-foundry",
@@ -29,7 +29,7 @@
     "displayName": "Brand Foundry",
     "shortDescription": "Branded images and video from reusable templates your agent fills",
     "longDescription": "Use Brand Foundry to turn a request into an on-brand asset: pick a template, fill in the words and images, and render a PNG, MP4 or transparent MOV locally. When no template fits, the agent writes a new reusable one into your library.",
-    "developerName": "Business Based Media",
+    "developerName": "Payton Kaleiwahea",
     "category": "Design",
     "capabilities": [
       "Interactive",

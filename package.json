@@ -4,6 +4,13 @@
   "private": true,
   "type": "module",
   "description": "A forkable, local-first template studio: author HTML templates, fill them in a browser UI, export branded PNGs and video.",
+  "author": "Payton Kaleiwahea (https://x.com/paytkaleiwahea)",
+  "license": "MIT",
+  "homepage": "https://github.com/bbm-media/brand-foundry",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bbm-media/brand-foundry.git"
+  },
   "scripts": {
     "setup": "node setup.mjs",
     "doctor": "node doctor.mjs",

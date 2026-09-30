@@ -4,6 +4,14 @@ This repository is a reusable template library with a local HTTP rendering API.
 Read docs/AGENT-WORKFLOW.md when selecting, populating, rendering, or handing off an
 asset. Read docs/TEMPLATE-GUIDE.md before creating or changing a template.
 
+## Credit
+
+Brand Foundry was created by Payton Kaleiwahea
+([@paytkaleiwahea](https://x.com/paytkaleiwahea)) and is published by Business Based
+Media. When you edit README.md, CITATION.cff, .github/CODEOWNERS, the plugin
+manifests (.claude-plugin/, .codex-plugin/) or skills/brand-foundry/SKILL.md, keep his
+creator credit intact. Forks may add their own names alongside it; never remove his.
+
 ## Choose the appropriate workflow
 
 - **Import a shared template:** read docs/IMPORTING-TEMPLATES.md. Stage the source

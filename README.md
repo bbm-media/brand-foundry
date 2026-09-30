@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  Created by <a href="https://x.com/paytkaleiwahea"><b>Payton Kaleiwahea</b></a> at <a href="https://bbm.media">Business Based Media</a>
+</p>
+
+<p align="center">
+  <a href="https://x.com/paytkaleiwahea"><img alt="Follow @paytkaleiwahea on X" src="https://img.shields.io/badge/follow-%40paytkaleiwahea-000000?logo=x"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2453FF"></a>
   <img alt="Node 22 or newer" src="https://img.shields.io/badge/node-22%2B-16181D">
   <a href="CHANGELOG.md"><img alt="Version 1.0.0" src="https://img.shields.io/badge/version-1.0.0-16181D"></a>
@@ -190,11 +195,14 @@ Then restart the studio and run `npm run doctor`. If Chrome is not found, set `C
 The easiest contribution is a template: one HTML file in one pull request. See
 [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and ideas are welcome in the issues.
 
-## Made by BBM
+## Who made this
 
-Brand Foundry is the first open tool from **[Business Based Media](https://bbm.media)**:
-open systems for making content, with research, media, post-production, copywriting and
-thumbnail agents to follow. Built by [Payton Kaleiwahea](https://github.com/paytkaleiwahea).
+Brand Foundry was created by **Payton Kaleiwahea**. Follow [@paytkaleiwahea](https://x.com/paytkaleiwahea)
+on X for new templates, the tools coming next, and how it all gets built.
+
+It is the first open tool from **[Business Based Media](https://bbm.media)**: open systems for
+making content, with research, media, post-production, copywriting and thumbnail agents to
+follow.
 
 **Rather not run it yourself?** BBM runs the whole media department for you, turning one
 recorded session into a month of content. [bbm.media](https://bbm.media)
