@@ -1,0 +1,56 @@
+name: Bug report
+description: Something broke, rendered wrong, or would not start.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please run `npm run doctor` first and paste its output below; it catches most setup problems.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+      placeholder: Exported Goo Spawn Logo as a transparent MOV. Expected my logo; got an empty frame.
+    validations:
+      required: true
+  - type: input
+    id: template
+    attributes:
+      label: Template and size
+      description: Which template and output size, if it is about a render.
+      placeholder: video/reveals/goo-spawn-logo, 16:9 wide
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Launcher or setup
+        - Library
+        - Editor or live preview
+        - PNG export
+        - MP4 or MOV export
+        - Brand Settings
+        - Agent skill or local API
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of npm run doctor
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system
+      placeholder: Windows 11, macOS 15, Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, exported files or console errors
+      description: Drag files in. For live preview problems, the browser console often shows the cause.
