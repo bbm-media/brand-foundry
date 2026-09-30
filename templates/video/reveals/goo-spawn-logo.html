@@ -4,9 +4,11 @@
   Same liquid spawn as goo-spawn-title, applied to a mark. The filter works on
   alpha, so any logo with a transparent background spawns correctly. Separate
   shapes show it best: they weld into one mass, then pinch apart.
-  "Solid" colors render the logo through a CSS mask filled with one color, which
-  pools into the cleanest liquid. "Original colors" filters the image itself;
-  its colors blend while it is a blob and resolve as it separates.
+  "Solid" colors recolor the logo inside the same SVG filter: a flood of one color
+  clipped to the logo's alpha. It pools into the cleanest liquid and fetches no
+  extra image, so it also works in the sandboxed live preview, where a CSS
+  mask-image fetch is blocked. "Original colors" filters the image itself; its
+  colors blend while it is a blob and resolve as it separates.
 -->
 <html data-brand-fonts
   lang="en"
@@ -33,10 +35,9 @@
          them would defeat the alpha threshold. */
       .goo { position: relative; display: block; max-width: 100%; }
       #logo { display: block; width: 100%; height: auto; }
-      #logoMask { position: absolute; inset: 0; background: var(--accentColor);
-        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-        -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
-      #root.tinted #logo { visibility: hidden; }
+      /* Solid tint color, resolved live from the brand variables. */
+      #flood1 { flood-color: var(--accentColor); }
+      #root.tint-text #flood1 { flood-color: var(--textColor); }
       .tagline { display: block; font-family: var(--sans); font-weight: 700; font-size: 46px;
         letter-spacing: -0.01em; color: var(--textColor); text-align: center; }
       html[data-size="half"] .tagline { font-size: 38px; }
@@ -48,6 +49,8 @@
          data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
       <svg class="defs" aria-hidden="true">
         <filter id="goo1" x="-30%" y="-60%" width="160%" height="220%" color-interpolation-filters="sRGB">
+          <feFlood id="flood1" result="flood" />
+          <feComposite in="flood" in2="SourceGraphic" operator="in" result="tinted" />
           <feGaussianBlur id="blur1" in="SourceGraphic" stdDeviation="0" result="blur" />
           <feColorMatrix id="edge1" in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
         </filter>
@@ -59,7 +62,6 @@
       <section id="stage" class="stage clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1">
         <div class="goo" id="g1" style="filter: url(#goo1)">
           <img id="logo" data-var-src="logoImage" src="assets/goo-sample-mark.svg" alt="" />
-          <div id="logoMask"></div>
         </div>
         <div class="goo" id="g2" style="filter: url(#goo2)"><span class="tagline" id="tag" data-var-text="tagline"></span></div>
       </section>
@@ -76,16 +78,11 @@
       const g1 = document.getElementById("g1");
       g1.style.width = logoPx + "px";
 
-      const src = String(vars.logoImage ?? "").trim() || "assets/goo-sample-mark.svg";
       const tint = ["accent", "text", "original"].includes(vars.logoTint) ? vars.logoTint : "original";
-      const mask = document.getElementById("logoMask");
-      if (tint === "original") mask.remove();
-      else {
-        root.classList.add("tinted");
-        const url = `url("${src.replace(/["\\]/g, encodeURIComponent)}")`;
-        mask.style.webkitMaskImage = url;
-        mask.style.maskImage = url;
-        if (tint === "text") mask.style.background = "var(--textColor)";
+      // Solid tints blur the flood-filled copy instead of the image itself.
+      if (tint !== "original") {
+        document.getElementById("blur1").setAttribute("in", "tinted");
+        if (tint === "text") root.classList.add("tint-text");
       }
       if (String(vars.tagline ?? "").trim() === "") document.getElementById("g2").remove();
 
