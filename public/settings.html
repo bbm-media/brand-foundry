@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand Settings | Brand Foundry</title>
+<link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/settings.css">
+<script src="/theme.js"></script>
+<script defer src="/studio-nav.js"></script>
+</head>
+<body>
+<main class="settings-wrap">
+  <header class="headrow"><a href="/">← Library</a><div id="themeSwitch"></div></header>
+  <p class="eyebrow">YOUR CREATIVE WORKSPACE</p>
+  <h1 class="h1">Brand Settings</h1>
+  <p class="sub">Set it once. Start every template with your look.</p>
+  <div class="settings-grid">
+    <form id="brandForm">
+      <fieldset disabled id="fields">
+        <section><h2>01 · Your identity</h2>
+          <label for="name">Studio or business name</label><input id="name" name="name" required maxlength="100" autocomplete="organization">
+          <label for="handle">Default handle or website</label><input id="handle" name="handle" maxlength="100" placeholder="@yourbrand">
+        </section>
+        <section><h2>02 · Your colors</h2><p class="hint">Paste a hex code or choose a color.</p><div id="colors" class="color-grid"></div></section>
+        <section><h2>03 · Your fonts</h2>
+          <p class="hint" id="fontCatalogStatus">Loading font choices…</p>
+          <label for="display">Heading font</label><input id="display" name="display" list="fontOptions" required maxlength="80" placeholder="Search fonts, e.g. Space Grotesk" autocomplete="off">
+          <label for="body">Body font</label><input id="body" name="body" list="fontOptions" required maxlength="80" placeholder="Search fonts, e.g. Source Sans 3" autocomplete="off">
+          <datalist id="fontOptions"><option value="Inter"><option value="Lora"><option value="Roboto"><option value="Montserrat"><option value="Open Sans"><option value="Playfair Display"><option value="Poppins"><option value="DM Sans"></datalist>
+          <p class="hint"><a href="https://fonts.google.com/" target="_blank" rel="noopener noreferrer">Browse Google Fonts ↗</a>, then type a family name above. Clear a field to browse suggestions. Fonts load online; unavailable fonts use a fallback.</p>
+          <p class="hint">Or start with a pairing:</p>
+          <div class="font-pairs"><button type="button" data-heading="Space Grotesk" data-body="DM Sans">Modern</button><button type="button" data-heading="Playfair Display" data-body="Source Sans 3">Editorial</button><button type="button" data-heading="Bebas Neue" data-body="Inter">Bold</button><button type="button" data-heading="Lora" data-body="Inter">Classic</button></div>
+        </section>
+        <button class="brand-action" id="save" type="submit">Save brand</button>
+        <a href="/" class="secondary-link">Back to templates</a>
+      </fieldset>
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+    <aside class="preview-panel"><div class="preview-heading"><h2>Your starter preview</h2><span class="pill">LIVE</span></div>
+      <div class="brand-preview"><iframe title="Branded starter template preview" id="preview" sandbox="allow-scripts" scrolling="no"></iframe></div>
+      <p class="hint" id="previewStatus" aria-live="polite">Loading your brand…</p>
+      <p class="hint">Applies to starter defaults and templates connected to your brand. Existing edited assets keep their overrides. A template’s dark theme uses its own contrast palette.</p>
+    </aside>
+  </div>
+</main><script src="/settings.js"></script>
+</body></html>

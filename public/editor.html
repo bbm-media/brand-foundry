@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Editor · Brand Foundry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/app.css" />
+<script src="/theme.js"></script>
+<script src="/editor-controls.js"></script>
+<script defer src="/brand-ui.js"></script>
+<style>
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 30px 70px; }
+  .back { color: var(--mut); font-size: 13px; font-weight: 600; }
+  .back:hover { color: var(--text); }
+  .cols { display: grid; grid-template-columns: minmax(280px, 400px) minmax(300px, 440px);
+    gap: 24px; align-items: start; justify-content: center; margin-top: 18px; }
+  /* Landscape compositions (16:9 video, 1280x720 thumbnails) need a wider column
+     or they preview postage-stamp small. */
+  .cols.wide { grid-template-columns: minmax(320px, 620px) minmax(300px, 440px); }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+  .stagewrap { position: sticky; top: 22px; }
+  .frame {
+    position: relative; border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--line); background: var(--panel); box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  }
+  .frame iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: top left; }
+  .frame.drag { outline: 3px dashed var(--accent); outline-offset: -3px; }
+  .drop { position: absolute; inset: 0; display: none; place-items: center; z-index: 3;
+    background: color-mix(in srgb, var(--bg) 78%, transparent); font-weight: 700; font-size: 14px; }
+  .frame.drag .drop { display: grid; }
+  .meta { color: var(--mut); font-size: 12px; margin-top: 10px; text-align: center; }
+  .err { color: #ff7b72; font-size: 12.5px; margin-top: 10px; white-space: pre-wrap; }
+  .err:empty { display: none; }
+  /* Actions read as one control panel under the stage rather than a stack of
+     full-width slabs, so the preview stays the biggest thing on the page. */
+  .stage-actions { margin-top: 12px; }
+  .szrow { display: flex; gap: 7px; flex-wrap: wrap; }
+  .sz { font-size: 12px; font-weight: 600; padding: 7px 11px; border-radius: 7px;
+    border: 1px solid var(--line); color: var(--mut); }
+  .sz:hover { border-color: var(--accent); color: var(--text); }
+  .sz.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .setimg { font-size: 11.5px; color: var(--accent); font-weight: 700; }
+</style>
+<script defer src="/studio-nav.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="headrow">
+    <div>
+      <a class="back" href="/">← Library</a>
+      <h1 class="h1" id="title" style="margin-top:8px">Loading…</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center"><a href="/settings.html">Brand Settings</a><div id="themeSwitch"></div></div>
+  </div>
+
+  <div class="cols">
+    <div class="stagewrap">
+      <div class="frame" id="frame">
+        <img id="stillPreview" alt="Template preview" style="width:100%;height:100%;object-fit:contain" />
+        <iframe hidden id="pv" sandbox="allow-scripts" scrolling="no"></iframe>
+        <div id="imageHotspots" aria-label="Editable images"></div>
+        <div class="drop">Drop image to place</div>
+      </div>
+      <div class="meta" id="meta"></div>
+      <section class="rail-panel stage-actions">
+        <h2>Preview</h2>
+        <div class="rail-actions">
+          <button class="btn-sm accent" id="savePreview">Save and preview</button>
+          <button class="btn-sm" id="playPreview">Play live</button>
+        </div>
+        <p class="note" id="saveStatus" role="status"></p>
+        <p class="note">Lightweight still preview by default. Exports retain full quality.</p>
+        <h2 style="margin-top:16px">Export</h2>
+        <div class="rail-actions">
+          <button class="btn-sm accent" id="png">Download PNG</button>
+          <button class="btn-sm" id="mp4" hidden>MP4</button>
+          <button class="btn-sm" id="mov" hidden>Transparent MOV</button>
+        </div>
+        <div class="err" id="err"></div>
+      </section>
+      <div class="rail" id="styleControls" style="margin-top:12px"></div>
+    </div>
+    <div class="rail" id="panel"></div>
+  </div>
+</div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+const ID = qs.get("t"); let SUFFIX = qs.get("s");
+const $ = (i) => document.getElementById(i);
+let TPL = null, SIZE = null, values = {}, appliedValues = {}, timer = null;
+mountThemeSwitch("themeSwitch");
+
+const draftKey = () => `asset-studio:draft:${ID}`;
+function saveDraft() {
+  updateSaveStatus();
+  try { sessionStorage.setItem(draftKey(), JSON.stringify(values)); } catch { /* storage unavailable */ }
+}
+const savedKey = () => 'asset-studio:saved:' + ID;
+function updateSaveStatus() {
+  const dirty = JSON.stringify(values) !== JSON.stringify(appliedValues);
+  document.querySelectorAll('.image-hotspot').forEach(button => { button.disabled = values[button.dataset.variable] !== appliedValues[button.dataset.variable]; });
+  $('saveStatus').textContent = dirty ? 'Unsaved changes. Save to update preview and downloads.' : 'Preview and downloads use saved values.';
+}
+function loadSaved(defaults) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(savedKey()) || 'null');
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return defaults;
+    return Object.fromEntries(Object.keys(defaults).map(key => [key, saved[key] ?? defaults[key]]));
+  } catch { return defaults; }
+}
+$('savePreview').onclick = () => {
+  try {
+    if (!StudioControls.validate($('panel'))) return;
+    localStorage.setItem(savedKey(), JSON.stringify(values));
+    appliedValues = { ...values };
+    saveDraft(); stopPreview(); refresh();
+    $('err').textContent = '';
+  } catch { $('err').textContent = 'Could not save in this browser. Check available browser storage.'; }
+};
+function loadDraft(defaults) {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(draftKey()) || "null");
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) return defaults;
+    return Object.fromEntries(Object.keys(defaults).map((key) => [key, saved[key] ?? defaults[key]]));
+  } catch { return defaults; }
+}
+
+const pv = $("pv"), frame = $("frame");
+function fit() {
+  if (!SIZE) return;
+  document.querySelector(".cols")?.classList.toggle("wide", SIZE.w > SIZE.h);
+  const s = frame.clientWidth / SIZE.w;
+  pv.style.width = SIZE.w + "px"; pv.style.height = SIZE.h + "px";
+  pv.style.transform = `scale(${s})`;
+  frame.style.height = SIZE.h * s + "px";
+}
+addEventListener("resize", fit);
+
+let livePreview = false, previewRevision = 0;
+function stopPreview() {
+  livePreview = false;
+  pv.src = 'about:blank'; pv.hidden = true;
+  $('imageHotspots').hidden = false;
+  $('stillPreview').hidden = false;
+  $('playPreview').textContent = 'Play live';
+}
+$('playPreview').onclick = () => {
+  if (livePreview) { stopPreview(); refresh(); }
+  else { livePreview = true; $('playPreview').textContent = 'Stop live'; refresh(); }
+};
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { ++previewRevision; clearTimeout(timer); stopPreview(); }
+  else refresh();
+});
+addEventListener('pagehide', () => { ++previewRevision; clearTimeout(timer); stopPreview(); });
+function refresh() {
+  clearTimeout(timer);
+  document.getElementById("imageHotspots").replaceChildren();
+  const revision = ++previewRevision;
+  timer = setTimeout(async () => {
+    if (document.hidden) return;
+    if (livePreview) {
+      $('stillPreview').hidden = true; pv.hidden = false; $('imageHotspots').hidden = true;
+      pv.src = '/preview/' + ID + '/' + SUFFIX + '?vars=' + encodeURIComponent(JSON.stringify(appliedValues));
+      return;
+    }
+    try {
+      const response = await fetch('/api/preview/still', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ID, suffix: SUFFIX, variables: appliedValues })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Preview failed');
+      if (revision === previewRevision && !livePreview && !document.hidden) {
+        const showTargets = () => { if(revision === previewRevision && !livePreview) mountImageHotspots(result.images || []); };
+        $('imageHotspots').replaceChildren(); $('stillPreview').onload = showTargets; $('stillPreview').src = result.url;
+        if($('stillPreview').complete)showTargets();
+      }
+    } catch (error) { if (revision === previewRevision) $('err').textContent = error.message; }
+  }, 650);
+}
+
+const imageVars = () => TPL.variables.filter((v) => v.type === "string" && !v.multiline && /image|img|photo|logo|shot/i.test(v.id));
+
+async function uploadTo(varId, file, tag, options = {}) {
+  try {
+    if (!file || !/^image\//.test(file.type)) throw new Error("Drop a PNG, JPEG, WebP, GIF or SVG");
+    const fd = new FormData(); fd.append("file", file);
+    const r = await fetch(`/api/upload/${ID}`, { method: "POST", body: fd });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || "Upload failed");
+    if (Number.isInteger(options.listIndex)) {
+      const paths = String(values[varId] || '').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      if(options.listIndex < 0)paths.push(j.path);else paths[options.listIndex]=j.path;
+      values[varId]=paths.join('\n');
+    } else values[varId] = j.path;
+    saveDraft();
+    if (tag) tag.textContent = "✓ image set";
+    return j.path;
+  } catch (e) { $("err").textContent = e.message; return null; }
+}
+
+function mountImageHotspots(images) {
+  const layer=$('imageHotspots');layer.replaceChildren();
+  for(const image of images){
+    const variable=TPL.variables.find(v=>v.id===image.variable);if(!variable)continue;
+    const button=document.createElement('button');button.type='button';button.className='image-hotspot';button.dataset.variable=image.variable;
+    button.style.left=image.x*100+'%';button.style.top=image.y*100+'%';button.style.width=image.w*100+'%';button.style.height=image.h*100+'%';
+    const title=Number.isInteger(image.index)?'Replace gallery image '+(image.index+1):'Replace '+(variable.label||variable.id);
+    button.setAttribute('aria-label',title);button.title=title;const label=document.createElement('span');label.textContent='Replace image';button.append(label);
+    button.onclick=()=>{
+      const target=Number.isInteger(image.index)?[...document.querySelectorAll('[data-image-variable]')].find(b=>b.dataset.imageVariable===image.variable&&Number(b.dataset.imageIndex)===image.index):document.getElementById('var-'+image.variable)?.closest('.fld')?.querySelector('.image-actions button');
+      target?.click();
+    };
+    layer.append(button);
+  }
+  updateSaveStatus();
+}
+
+function buildPanel() {
+  const p = $("panel"); p.innerHTML = "";
+
+  if (TPL.sizes.length > 1) {
+    const d = document.createElement("section"); d.className = "rail-panel";
+    d.innerHTML = `<h2>Size</h2><div class="szrow">${TPL.sizes.map((s) =>
+      `<a class="sz ${s.suffix === SUFFIX ? "on" : ""}" href="/editor.html?t=${encodeURIComponent(ID)}&s=${s.suffix}">${s.label}</a>`).join("")}</div>`;
+    d.querySelectorAll("a").forEach((a) => a.addEventListener("click", saveDraft));
+    p.appendChild(d);
+  }
+
+  const controls = document.createElement("div");
+  controls.className = "rail"; controls.id = "templateControls";
+  p.appendChild(controls);
+  StudioControls.mount(controls, TPL.variables, values, () => saveDraft(), uploadTo, SIZE, $('styleControls'));
+
+}
+
+async function exportAs(btnId, label, endpoint, extra) {
+  const b = $(btnId); const e = $("err");
+  b.disabled = true; b.textContent = "Rendering…"; e.textContent = "";
+  try {
+    const r = await fetch(endpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: ID, suffix: SUFFIX, variables: appliedValues, ...extra }),
+    });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || "Export failed");
+    const a = document.createElement("a"); a.href = j.url; a.download = "";
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch (err) { e.textContent = err.message; }
+  b.disabled = false; b.textContent = label;
+}
+$("png").onclick = () => exportAs("png", "Download PNG", "/api/export/png", {});
+$("mp4").onclick = () => exportAs("mp4", "MP4", "/api/export/video", { transparent: false });
+$("mov").onclick = () => exportAs("mov", "Transparent MOV", "/api/export/video", { transparent: true });
+
+// drag an image anywhere onto the preview → first image slot
+let depth = 0;
+frame.addEventListener("dragenter", (e) => { if (imageVars().length) { e.preventDefault(); depth++; frame.classList.add("drag"); } });
+frame.addEventListener("dragover", (e) => { if (imageVars().length) e.preventDefault(); });
+frame.addEventListener("dragleave", () => { if (--depth <= 0) { depth = 0; frame.classList.remove("drag"); } });
+frame.addEventListener("drop", (e) => {
+  e.preventDefault(); depth = 0; frame.classList.remove("drag");
+  const v = imageVars()[0]; if (!v) return;
+  const f = e.dataTransfer.files[0];
+  if (f) uploadTo(v.id, f, null).then(buildPanel);
+});
+
+fetch("/api/manifest").then((r) => r.json()).then((data) => {
+  document.documentElement.style.setProperty("--accent", data.brand.accent);
+  document.documentElement.style.setProperty("--accent-soft", data.brand.accentSoft);
+  TPL = data.templates.find((t) => t.id === ID);
+  if (!TPL) { $("title").textContent = "Template not found"; return; }
+  SUFFIX = SUFFIX && TPL.sizes.some((s) => s.suffix === SUFFIX) ? SUFFIX : TPL.sizes[0].suffix;
+  SIZE = TPL.sizes.find((s) => s.suffix === SUFFIX);
+  appliedValues = loadSaved(Object.fromEntries(TPL.variables.map((v) => [v.id, v.default])));
+  values = { ...loadDraft(appliedValues) };
+  updateSaveStatus();
+  $("title").textContent = TPL.label;
+  $("sub").textContent = `${TPL.mediaLabel} · ${TPL.categoryLabel}`;
+  $("meta").textContent = `${SIZE.w}×${SIZE.h} · exports at ${data.render.scale}×`;
+  if (TPL.kind === "motion") { $("mp4").hidden = false; $("mov").hidden = false; $("png").textContent = "Download still (PNG)"; }
+  buildPanel(); fit(); refresh();
+}).catch((e) => { $("err").textContent = e.message; });
+</script>
+</body>
+</html>

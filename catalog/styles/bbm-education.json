@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "type": "editing-style",
+  "id": "bbm-education",
+  "version": "0.1.0",
+  "title": "BBM educational edit",
+  "description": "An editable starting point for explanation-led editing. Review and adapt before use.",
+  "author": "Business Based Media",
+  "license": "MIT",
+  "rules": [
+    "Preserve the meaning, original dialogue and important pauses.",
+    "Search approved library assets before proposing new ones. Inspect the actual file; tags alone are not proof of fit.",
+    "Prefer demonstrations for processes, evidence for claims, and brief text for key takeaways.",
+    "Every 10\u201315 seconds, assess whether visual variety would help. Do not force a cut on a timer.",
+    "Use camera changes and 3D captions when they clarify or emphasize a specific beat.",
+    "Flag poor matches, explain why, and propose reuse, adaptation or generation options. Wait for user direction before generating replacements.",
+    "Record asset ID, reason, source range, timeline position, duration and requested track in the edit plan. Verify editor MCP capabilities before placing anything."
+  ],
+  "dependencies": [
+    {
+      "id": "camera-3d-captions",
+      "source": "https://github.com/heygen-com/hyperframes-community-skills/tree/master/skills/camera-3d-captions",
+      "required": false,
+      "status": "Not installed by this package"
+    }
+  ]
+}

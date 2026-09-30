@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const html=fs.readFileSync(new URL('../public/editor.html',import.meta.url),'utf8');
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const start=script.indexOf('const draftKey');
+const end=script.indexOf('const pv =');
+const elements={}; const saved=new Map(), drafts=new Map();
+const storage=m=>({getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v)});
+const context=vm.createContext({document:{querySelectorAll:()=>[]},StudioControls:{validate:()=>true},localStorage:storage(saved),sessionStorage:storage(drafts),$:id=>elements[id]??=( {} ),ID:'video/overlays/demo',values:{headline:'Original'},appliedValues:{headline:'Original'},renders:0,stopPreview(){},refresh(){context.renders++}});
+vm.runInContext(script.slice(start,end),context);
+vm.runInContext(script.match(/values = \{ \.\.\.loadDraft\(appliedValues\) \};/)[0],context);
+context.values.headline='Draft'; vm.runInContext('saveDraft()',context);
+assert.equal(context.renders,0);assert.equal(context.appliedValues.headline,'Original');
+elements.savePreview.onclick();assert.equal(context.renders,1);assert.equal(context.appliedValues.headline,'Draft');
+context.values.headline='Unapplied';vm.runInContext('saveDraft()',context);
+assert.equal(vm.runInContext('loadSaved({headline:"Default"}).headline',context),'Draft');
+assert.equal(vm.runInContext('loadDraft(loadSaved({headline:"Default"})).headline',context),'Unapplied');
+assert(!/oninput[^\n]*refresh\(/.test(script));
+assert(script.includes('variables: appliedValues, ...extra'));
+assert(!script.slice(script.indexOf('async function uploadTo'),script.indexOf('function buildPanel')).includes('refresh()'));
+console.log('PASS: edits do not render; Save renders once; saved values persist; drafts survive size navigation; exports use applied values; uploads do not render.');
+

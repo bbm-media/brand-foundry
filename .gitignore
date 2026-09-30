@@ -1,0 +1,12 @@
+node_modules/
+build/
+.build-stage-*/
+.build-previous-*/
+.cache/
+exports/
+uploads/
+*.log
+.DS_Store
+
+# Private prompts, references and generation history
+user-data/

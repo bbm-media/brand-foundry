@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brand Foundry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/app.css" />
+<script src="/theme.js"></script>
+<script defer src="/brand-ui.js"></script>
+<script defer src="/studio-nav.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><div class="mark" id="mark">A</div><div class="name" id="brandName">Brand Foundry</div></div>
+    <div class="workspace">
+      <div class="dot"></div>
+      <div class="meta"><div class="t" id="wsName">Library</div><div class="s" id="wsCount">·</div></div>
+    </div>
+    <a class="navitem" href="/discover.html?kind=asset">Saved media and asset records</a>
+    <nav id="nav"></nav>
+    <a class="navitem brand-settings-link" href="/settings.html">⚙ Brand Settings</a>
+  </aside>
+
+  <main class="main">
+    <div class="headrow">
+      <div>
+        <h1 class="h1" id="title">Library</h1>
+        <div class="sub" id="subtitle">Every template, ready to fill and export.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="pill" id="builtAt">·</div>
+        <div id="themeSwitch"></div>
+      </div>
+    </div>
+
+
+    <div class="section-t">Quick Insights</div>
+    <div class="stats" id="stats"></div>
+
+    <div class="section-t" id="gridTitle">Templates</div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<script>
+const ICONS = {
+  layers: "▤", image: "▣", play: "▶", all: "◈",
+};
+const $ = (id) => document.getElementById(id);
+let DATA = null;
+let filter = { media: null, category: null };
+
+mountThemeSwitch("themeSwitch");
+
+function visible() {
+  let list = DATA.templates;
+  if (filter.media) list = list.filter((t) => t.media === filter.media);
+  if (filter.category) list = list.filter((t) => t.category === filter.category);
+  return list;
+}
+
+function renderNav() {
+  const nav = $("nav");
+  nav.innerHTML = "";
+
+  const all = document.createElement("button");
+  all.className = "navitem" + (!filter.media ? " on" : "");
+  all.innerHTML = `<span class="ic">${ICONS.all}</span>All templates<span class="count">${DATA.templates.length}</span>`;
+  all.onclick = () => { filter = { media: null, category: null }; render(); };
+  nav.appendChild(all);
+
+  for (const m of DATA.media) {
+    const mine = DATA.templates.filter((t) => t.media === m.id);
+    const cats = [...new Set(mine.map((t) => t.category))].sort();
+    const open = !filter.media || filter.media === m.id;
+
+    const g = document.createElement("div");
+    g.className = "navgroup" + (open ? "" : " closed");
+    g.innerHTML = `<button class="head"><span>${m.label}</span><span class="chev">▼</span></button>
+                   <div class="items"></div>`;
+    g.querySelector(".head").onclick = () => g.classList.toggle("closed");
+
+    const items = g.querySelector(".items");
+    const top = document.createElement("button");
+    top.className = "navitem" + (filter.media === m.id && !filter.category ? " on" : "");
+    top.innerHTML = `<span class="ic">${ICONS[m.icon] || "◆"}</span>All ${m.label.toLowerCase()}<span class="count">${mine.length}</span>`;
+    top.onclick = () => { filter = { media: m.id, category: null }; render(); };
+    items.appendChild(top);
+
+    for (const c of cats) {
+      const n = mine.filter((t) => t.category === c).length;
+      const b = document.createElement("button");
+      b.className = "navitem" + (filter.media === m.id && filter.category === c ? " on" : "");
+      b.innerHTML = `<span class="ic">·</span>${cap(c)}<span class="count">${n}</span>`;
+      b.onclick = () => { filter = { media: m.id, category: c }; render(); };
+      items.appendChild(b);
+    }
+    if (!cats.length) {
+      const e = document.createElement("div");
+      e.className = "navitem"; e.style.opacity = ".5"; e.style.cursor = "default";
+      e.innerHTML = `<span class="ic">·</span>No templates yet`;
+      items.appendChild(e);
+    }
+    nav.appendChild(g);
+  }
+}
+
+function renderStats() {
+  const list = visible();
+  const cats = new Set(list.map((t) => t.media + "/" + t.category));
+  const outputSizes = list.reduce((n, t) => n + t.sizes.length, 0);
+  const cards = [
+    ["Templates", list.length, "in this view"],
+    ["Categories", cats.size, "in this view"],
+    ["Output sizes", outputSizes, "available combinations"],
+    ["Media types", new Set(list.map((t) => t.media)).size, "in this view"],
+  ];
+  $("stats").innerHTML = cards.map(([k, v, n]) =>
+    `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");
+}
+
+function renderGrid() {
+  const list = visible();
+  const grid = $("grid");
+  if (!list.length) {
+    grid.innerHTML = "";
+    grid.insertAdjacentHTML("beforeend",
+      `<div class="empty" style="grid-column:1/-1">
+        No templates here yet.<br><br>
+        Drop an HTML file in <code>templates/${filter.media || "&lt;media&gt;"}/${filter.category || "&lt;category&gt;"}/</code>
+        then run <code>npm run build</code>.
+      </div>`);
+    return;
+  }
+  grid.innerHTML = list.map((t) => `
+    <div class="card">
+      <div class="thumb" style="aspect-ratio:${Number(t.sizes[0].w)}/${Number(t.sizes[0].h)}"><div class="skel">rendering…</div><img alt="" data-tid="${t.id}" hidden></div>
+      <div class="body">
+        <div class="nm">${t.label}</div>
+        <div class="tags">
+          <span class="tag">${t.mediaLabel}</span>
+          <span class="tag plain">${t.categoryLabel}</span>
+        </div>
+        <div class="sizes">
+          ${t.sizes.map((s) => `<a class="szbtn" href="/editor.html?t=${encodeURIComponent(t.id)}&s=${s.suffix}">${s.label}</a>`).join("")}
+        </div>
+      </div>
+    </div>`).join("");
+
+  // Thumbnails load lazily and are served from the server's disk cache.
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const img = e.target; io.unobserve(img);
+      fetch(`/api/thumb/${img.dataset.tid}`).then((r) => r.json()).then((j) => {
+        if (!j.url) throw new Error(j.error || "no thumb");
+        img.src = j.url;
+        img.onload = () => { img.hidden = false; img.previousElementSibling.remove(); };
+      }).catch(() => { img.previousElementSibling.textContent = "preview unavailable"; });
+    }
+  }, { rootMargin: "300px" });
+  grid.querySelectorAll("img[data-tid]").forEach((img) => io.observe(img));
+}
+
+function render() {
+  const m = DATA.media.find((x) => x.id === filter.media);
+  $("title").textContent = filter.category ? cap(filter.category) : (m ? m.label : "Library");
+  $("subtitle").textContent = m ? m.blurb : "Every template, ready to fill and export.";
+  $("gridTitle").textContent = filter.category ? `${cap(filter.category)} templates` : "Templates";
+  renderNav(); renderStats(); renderGrid();
+}
+const cap = (s) => s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Nudge a fresh fork toward setup, until the config is personalised or dismissed.
+fetch("/api/manifest").then((r) => r.json()).then((data) => {
+  if (data.error) throw new Error(data.error);
+  DATA = data;
+  document.documentElement.style.setProperty("--accent", data.brand.accent);
+  document.documentElement.style.setProperty("--accent-soft", data.brand.accentSoft);
+  $("brandName").textContent = data.brand.name;
+  $("mark").textContent = (data.brand.name || "A").trim()[0].toUpperCase();
+  document.title = data.brand.name;
+  $("wsName").textContent = data.brand.handle || "Library";
+  $("wsCount").textContent = `${data.templates.length} templates`;
+  $("builtAt").textContent = "Built " + new Date(data.builtAt).toLocaleString();
+
+  render();
+}).catch((e) => {
+  $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">${e.message}<br><br>
+    Run <code>npm run build</code>, then reload.</div>`;
+});
+</script>
+</body>
+</html>
