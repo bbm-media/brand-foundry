@@ -76,7 +76,7 @@ templates first; **Brand Settings** is always one click away.
 
 ## Make your own template with AI
 
-Paste **[TEMPLATE-GUIDE.md](TEMPLATE-GUIDE.md)** into Claude, ChatGPT or any capable model,
+Paste **[TEMPLATE-GUIDE.md](docs/TEMPLATE-GUIDE.md)** into Claude, ChatGPT or any capable model,
 describe the asset you want, and save what it gives you as
 `templates/<media>/<category>/<name>.html`. Run `npm run build` and it appears in your library.
 
@@ -87,14 +87,14 @@ category in the sidebar, with no code change.
 
 - **Claude Code** reads [CLAUDE.md](CLAUDE.md); **Codex** reads [AGENTS.md](AGENTS.md). Both
   point to the same shared instructions.
-- To register it as a skill, copy [SKILL.md](SKILL.md) to `.claude/skills/brand-foundry/SKILL.md`
+- To register it as a skill, copy [SKILL.md](docs/SKILL.md) to `.claude/skills/brand-foundry/SKILL.md`
   (Claude Code) or `.agents/skills/brand-foundry/SKILL.md` (Codex).
-- [AGENT-WORKFLOW.md](AGENT-WORKFLOW.md) shows the local API: pick a template, send field values,
+- [AGENT-WORKFLOW.md](docs/AGENT-WORKFLOW.md) shows the local API: pick a template, send field values,
   get back a PNG, MP4 or MOV, and hand it to Premiere or Resolve.
 
 The connection is your running local server plus file access to this folder. No MCP server
 is bundled, and a cloud agent cannot reach your `localhost` on its own. See
-[CLOUD-ACCESS.md](CLOUD-ACCESS.md) for self-hosting.
+[CLOUD-ACCESS.md](docs/CLOUD-ACCESS.md) for self-hosting.
 
 This repository is itself built by Claude Code and Codex working side by side. The rules they
 follow are in [AGENTS.md](AGENTS.md).
@@ -134,14 +134,14 @@ Then restart the studio and run `npm run doctor`. If Chrome is not found, set `C
 
 | Read this | When you want to |
 |---|---|
-| [USER-GUIDE.md](USER-GUIDE.md) | Create, save, export and share, step by step |
-| [START-HERE.md](START-HERE.md) | Install from a download, or fix setup problems |
-| [ONBOARDING.md](ONBOARDING.md) | Set up your brand with a wizard, or let an AI interview you |
-| [TEMPLATE-GUIDE.md](TEMPLATE-GUIDE.md) | Write templates, by hand or with AI |
-| [IMPORTING-TEMPLATES.md](IMPORTING-TEMPLATES.md) | Bring in templates someone else shared |
+| [USER-GUIDE.md](docs/USER-GUIDE.md) | Create, save, export and share, step by step |
+| [START-HERE.md](docs/START-HERE.md) | Install from a download, or fix setup problems |
+| [ONBOARDING.md](docs/ONBOARDING.md) | Set up your brand with a wizard, or let an AI interview you |
+| [TEMPLATE-GUIDE.md](docs/TEMPLATE-GUIDE.md) | Write templates, by hand or with AI |
+| [IMPORTING-TEMPLATES.md](docs/IMPORTING-TEMPLATES.md) | Bring in templates someone else shared |
 | [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) | Understand the render pipeline, caching, drafts and layout |
 | [docs/UPDATING.md](docs/UPDATING.md) | Update without losing your library |
-| [DEPLOY.md](DEPLOY.md) | Host it on your own server |
+| [DEPLOY.md](docs/DEPLOY.md) | Host it on your own server |
 
 ## Contributing
 

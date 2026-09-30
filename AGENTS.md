@@ -1,12 +1,12 @@
 # Brand Foundry agent instructions
 
 This repository is a reusable template library with a local HTTP rendering API.
-Read AGENT-WORKFLOW.md when selecting, populating, rendering, or handing off an
-asset. Read TEMPLATE-GUIDE.md before creating or changing a template.
+Read docs/AGENT-WORKFLOW.md when selecting, populating, rendering, or handing off an
+asset. Read docs/TEMPLATE-GUIDE.md before creating or changing a template.
 
 ## Choose the appropriate workflow
 
-- **Import a shared template:** read IMPORTING-TEMPLATES.md. Stage the source
+- **Import a shared template:** read docs/IMPORTING-TEMPLATES.md. Stage the source
   outside the library, inspect it, then create a uniquely named local category
   containing selected templates and their dependencies. Never overlay a downloaded
   repository onto the checkout or replace local brand configuration. Adapt the
@@ -38,7 +38,7 @@ Do not start a second server when the correct one is already running.
 ## Brand and template contract
 
 - Use brandKey for inheritable variable defaults and data-brand-fonts for
-  heading/body fonts, as documented in TEMPLATE-GUIDE.md. Preserve deliberate
+  heading/body fonts, as documented in docs/TEMPLATE-GUIDE.md. Preserve deliberate
   per-asset overrides and independent templates.
 - Editable fields belong in data-composition-variables. Canvas tokens are
   {{WIDTH}}, {{HEIGHT}}, and {{LABEL}}. Motion templates follow HyperFrames.

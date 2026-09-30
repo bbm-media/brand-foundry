@@ -24,7 +24,7 @@ Close the launcher or press Ctrl+C to stop a studio started by that window.
 
 Chrome is needed for PNGs. Video exports also need HyperFrames (installed by npm
 when available), FFmpeg and FFprobe. The launcher does not install native Chrome
-or FFmpeg. See [README.md](README.md#video-export-setup) for installation steps.
+or FFmpeg. See [README.md](../README.md#video-export-setup) for installation steps.
 If export fails, run `npm run doctor` from this folder.
 
 Font names are bundled so browsing the list needs no API key. Loading Google Fonts
