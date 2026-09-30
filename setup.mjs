@@ -2,7 +2,7 @@
 //
 // Two ways in:
 //   npm run setup           interactive Q&A
-//   npm run setup -- --paste  paste a JSON config an LLM wrote for you (see ONBOARDING.md)
+//   npm run setup -- --paste  paste a JSON config an LLM wrote for you (see docs/ONBOARDING.md)
 //
 // Writes studio.config.json, scaffolds your category folders, and seeds each one
 // with a working template so you have something to look at immediately.
@@ -107,7 +107,7 @@ function apply(cfg, { seed = true, keepStarters = !cfg.hideStarters } = {}) {
 
 // ---------- paste mode ----------
 async function pasteMode(rl) {
-  say(`\n${C.b}Paste the JSON your LLM produced${C.r} (see ONBOARDING.md for the prompt).`);
+  say(`\n${C.b}Paste the JSON your LLM produced${C.r} (see docs/ONBOARDING.md for the prompt).`);
   say(`${C.dim}Paste it, then type END on its own line.${C.r}\n`);
   const lines = [];
   for (;;) {
@@ -202,7 +202,7 @@ function done(cfg, made) {
   say(`\n  Next:`);
   say(`    ${C.b}npm start${C.r}   ${C.dim}build + open the studio${C.r}`);
   say(`  Then rename the seeded templates and make them yours.`);
-  say(`  ${C.dim}Authoring spec (also pasteable to an LLM): TEMPLATE-GUIDE.md${C.r}\n`);
+  say(`  ${C.dim}Authoring spec (also pasteable to an LLM): docs/TEMPLATE-GUIDE.md${C.r}\n`);
 }
 
 const rl = lineReader();

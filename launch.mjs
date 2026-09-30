@@ -62,4 +62,4 @@ async function main() {
   }
   if(!ended) { console.error('The studio did not become ready. Review the errors above and run npm run doctor.'); server.kill(); process.exitCode=1; }
 }
-main().catch(error => { console.error(`\nCould not start Brand Foundry: ${error.message}\nRead START-HERE.md for setup help.`); process.exitCode=1; });
+main().catch(error => { console.error(`\nCould not start Brand Foundry: ${error.message}\nRead docs/START-HERE.md for setup help.`); process.exitCode=1; });

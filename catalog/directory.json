@@ -18,7 +18,7 @@
       "Upstream setup and model review",
       "Bundle TypeScript for the browser; wire deterministic animation before importing"
     ],
-    "instructions": "Read https://github.com/img2threejs/img2threejs and its current setup instructions. Check the installed version and prerequisites before installing anything. Ask me for a reference image and intended result. Create and review a reusable model in a separate working folder. Keep model source, reference provenance, dependencies and review notes together. After I approve the model, adapt a copy to Brand Foundry using TEMPLATE-GUIDE.md. Preserve existing templates. Save a recipe with the source version and output paths. Do not claim integration or installation until verified."
+    "instructions": "Read https://github.com/img2threejs/img2threejs and its current setup instructions. Check the installed version and prerequisites before installing anything. Ask me for a reference image and intended result. Create and review a reusable model in a separate working folder. Keep model source, reference provenance, dependencies and review notes together. After I approve the model, adapt a copy to Brand Foundry using docs/TEMPLATE-GUIDE.md. Preserve existing templates. Save a recipe with the source version and output paths. Do not claim integration or installation until verified."
   },
   {
     "id": "camera-3d-captions",
@@ -100,7 +100,7 @@
     "requirements": [
       "A separately installed and configured editor integration"
     ],
-    "instructions": "Read AGENT-WORKFLOW.md. Inspect the connected editor tools and their supported import and timeline operations. Render the requested asset, verify the file, then place it only through the available integration. Report placement only after the editor confirms it."
+    "instructions": "Read docs/AGENT-WORKFLOW.md. Inspect the connected editor tools and their supported import and timeline operations. Render the requested asset, verify the file, then place it only through the available integration. Report placement only after the editor confirms it."
   },
   {
     "id": "generation-provider",

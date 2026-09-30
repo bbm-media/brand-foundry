@@ -27,7 +27,7 @@ If switching or pulling fails, stop and reconcile your local changes with the up
 
 ## If you downloaded a ZIP
 
-Extract the new version into a different folder and keep the old installation intact. Install its dependencies, then transfer `uploads/`, `exports/`, and `user-data/` with their relative paths preserved. Merge your custom templates and their dependencies into distinct categories using [the template import guide](../IMPORTING-TEMPLATES.md). Review any modified shipped templates instead of replacing the new templates wholesale.
+Extract the new version into a different folder and keep the old installation intact. Install its dependencies, then transfer `uploads/`, `exports/`, and `user-data/` with their relative paths preserved. Merge your custom templates and their dependencies into distinct categories using [the template import guide](IMPORTING-TEMPLATES.md). Review any modified shipped templates instead of replacing the new templates wholesale.
 
 Use Brand Settings to reapply your branding, or carefully merge the brand section of your old configuration into the new configuration. Preserve custom categories and sizes you need. Do not copy `node_modules/`, `build/`, or `.cache/`; install dependencies and rebuild with `npm start` in the new folder. Run `npm run doctor`, verify a template, an uploaded background, a saved recipe and an export, then use the new installation. Keep the backup until those checks pass.
 

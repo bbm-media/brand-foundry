@@ -7,7 +7,7 @@ HTML file in one pull request.
 
 1. Fork the repo and create a branch, for example `template/quote-card`.
 2. Write `templates/<media>/<category>/<name>.html`, following
-   [TEMPLATE-GUIDE.md](TEMPLATE-GUIDE.md). You can paste that guide into Claude, ChatGPT or
+   [TEMPLATE-GUIDE.md](docs/TEMPLATE-GUIDE.md). You can paste that guide into Claude, ChatGPT or
    Codex and describe the asset you want; it contains everything a model needs.
    - `<media>` is `statics`, `carousels` or `video`.
    - `<category>` names the job, not the look: `quotes`, `lower-thirds`, `reveals`.
