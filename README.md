@@ -12,7 +12,8 @@
 <p align="center">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2453FF"></a>
   <img alt="Node 22 or newer" src="https://img.shields.io/badge/node-22%2B-16181D">
-  <img alt="Works with Claude Code and Codex" src="https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex-C4361F">
+  <a href="CHANGELOG.md"><img alt="Version 1.0.0" src="https://img.shields.io/badge/version-1.0.0-16181D"></a>
+  <a href="skills/brand-foundry/SKILL.md"><img alt="Agent Skill for Claude Code and Codex" src="https://img.shields.io/badge/agent%20skill-Claude%20Code%20%C2%B7%20Codex-C4361F"></a>
 </p>
 
 ---
@@ -23,26 +24,32 @@ your agent can fill it forever: new words, new photos, every size, always on bra
 
 The animation above was rendered by Brand Foundry, from the included **Goo Spawn** template.
 
-## What you get
+## Install
 
-- **Stills:** carousels and posters exported as PNG at 4:5, 1:1 and 9:16.
-- **Motion:** overlays, lower thirds, stat hits and reveals exported as MP4, or as a
-  **transparent MOV** that drops straight onto a Premiere or Resolve timeline.
-- **Your brand, set once:** colors, fonts and handle apply to every template automatically.
-- **Built for agents:** Claude Code and Codex can write new templates, fill existing ones and
-  render them through a local API. Instructions for both ship in the repo.
-- **Local and deterministic:** no design SaaS, no per-asset cost, no image model in the render
-  path. Same input, same output, every time.
+### With your agent
 
-<p align="center">
-  <img src="docs/media/library.png" alt="The Brand Foundry library: a sidebar of carousels, statics and video categories beside a grid of template thumbnails" width="880">
-</p>
+**Claude Code:**
 
-<p align="center">
-  <img src="docs/media/editor.png" alt="The editor: a logo template preview on the left and a compact panel of content, brand, spawn and timing controls on the right" width="880">
-</p>
+```
+/plugin marketplace add bbm-media/brand-foundry
+/plugin install brand-foundry@brand-foundry
+```
 
-## Quick start
+**Codex, Cursor, Gemini CLI and other [Agent Skills](https://agentskills.io) apps:**
+
+```bash
+npx skills add bbm-media/brand-foundry -g
+```
+
+Then send your agent:
+
+```text
+Use Brand Foundry to make a 9:16 title card that says "Every frame counts."
+```
+
+It sets the studio up on your machine if it is not there yet, asking first, then renders the file and tells you where it is. Keep going: *"Make a 16:9 version"*, *"Animate my logo with Goo Spawn as a transparent MOV"*, *"Save that as a template I can reuse."*
+
+### By hand
 
 **Download and double-click.** Grab the ZIP from the [latest release](https://github.com/bbm-media/brand-foundry/releases/latest),
 extract it, and open **Start Brand Foundry.bat** (Windows) or run
@@ -62,6 +69,25 @@ FFprobe; see [video export setup](#video-export-setup). Run `npm run doctor` to 
 
 First launch offers a short brand setup. Skip it if you just want to explore the included
 templates first; **Brand Settings** is always one click away.
+
+## What you get
+
+- **Stills:** carousels and posters exported as PNG at 4:5, 1:1 and 9:16.
+- **Motion:** overlays, lower thirds, stat hits and reveals exported as MP4, or as a
+  **transparent MOV** that drops straight onto a Premiere or Resolve timeline.
+- **Your brand, set once:** colors, fonts and handle apply to every template automatically.
+- **Built for agents:** Claude Code and Codex can write new templates, fill existing ones and
+  render them through a local API. Instructions for both ship in the repo.
+- **Local and deterministic:** no design SaaS, no per-asset cost, no image model in the render
+  path. Same input, same output, every time.
+
+<p align="center">
+  <img src="docs/media/library.png" alt="The Brand Foundry library: a sidebar of carousels, statics and video categories beside a grid of template thumbnails" width="880">
+</p>
+
+<p align="center">
+  <img src="docs/media/editor.png" alt="The editor: a logo template preview on the left and a compact panel of content, brand, spawn and timing controls on the right" width="880">
+</p>
 
 ## Included templates
 
@@ -87,8 +113,8 @@ category in the sidebar, with no code change.
 
 - **Claude Code** reads [CLAUDE.md](CLAUDE.md); **Codex** reads [AGENTS.md](AGENTS.md). Both
   point to the same shared instructions.
-- To register it as a skill, copy [SKILL.md](docs/SKILL.md) to `.claude/skills/brand-foundry/SKILL.md`
-  (Claude Code) or `.agents/skills/brand-foundry/SKILL.md` (Codex).
+- The skill lives at [skills/brand-foundry/SKILL.md](skills/brand-foundry/SKILL.md) and installs with one
+  command; see [Install](#install).
 - [AGENT-WORKFLOW.md](docs/AGENT-WORKFLOW.md) shows the local API: pick a template, send field values,
   get back a PNG, MP4 or MOV, and hand it to Premiere or Resolve.
 

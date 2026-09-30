@@ -1,0 +1,24 @@
+{
+  "name": "brand-foundry",
+  "owner": {
+    "name": "Business Based Media",
+    "url": "https://bbm.media"
+  },
+  "metadata": {
+    "description": "Marketplace hosting the Brand Foundry plugin."
+  },
+  "plugins": [
+    {
+      "name": "brand-foundry",
+      "description": "Templates your AI agents fill. Branded images, carousels, stat cards, logo reveals and video overlays, rendered on your machine to PNG, MP4 or transparent MOV.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Business Based Media",
+        "url": "https://bbm.media"
+      },
+      "source": "./",
+      "category": "design",
+      "homepage": "https://github.com/bbm-media/brand-foundry"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "brand-foundry",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "A forkable, local-first template studio: author HTML templates, fill them in a browser UI, export branded PNGs and video.",

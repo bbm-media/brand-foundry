@@ -1,0 +1,40 @@
+name: Template request
+description: Ask for a new template, or offer to build one.
+labels: [template]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The best templates are reusable forms, not one post: a quote card, a lower third, a countdown. Want to build it yourself? [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) shows how in one pull request.
+  - type: textarea
+    id: what
+    attributes:
+      label: What should it make
+      description: What goes in, and what comes out.
+      placeholder: A quote card. Fields for the quote, the person's name and a photo. Exports 4:5 and 1:1 PNG.
+    validations:
+      required: true
+  - type: dropdown
+    id: media
+    attributes:
+      label: Media
+      options:
+        - Static image
+        - Carousel
+        - Video or motion overlay
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      description: A link, screenshot or clip of the look you mean.
+  - type: dropdown
+    id: build
+    attributes:
+      label: Will you build it?
+      options:
+        - I would like someone else to build it
+        - I want to build it and would welcome feedback
+    validations:
+      required: true

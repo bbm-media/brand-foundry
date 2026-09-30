@@ -8,8 +8,8 @@ adapt it to this studio's brand, then use the discovery and rendering steps belo
 
 Claude Code or Codex uses its terminal and filesystem tools to access the local
 checkout, and an HTTP client to call Brand Foundry. The studio's server is the
-connection; AGENTS.md and SKILL.md explain how to use it. No dedicated Asset
-Studio MCP server is included or required for this workflow.
+connection; AGENTS.md and skills/brand-foundry/SKILL.md explain how to use it. No dedicated Brand
+Foundry MCP server is included or required for this workflow.
 
 The agent and studio must be on the same host, or have an explicitly configured
 connection. Localhost in a cloud agent, container or WSL environment may refer to
