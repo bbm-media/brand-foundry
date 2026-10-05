@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  BAR RACE · video / data
+  A ranked comparison: bars grow one after another, each value counts up as
+  its bar travels, and the winning bar lands in the accent color.
+  The count uses GSAP modifiers on innerText, which run on every render,
+  including seeks, so the number always matches the bar at any frame. Bar width,
+  value position and value text are three different properties.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "title", "type": "string", "group": "Content", "label": "Title (blank hides)", "default": "Posts shipped per week"}, {"id": "bars", "type": "string", "multiline": true, "group": "Content", "label": "Bars", "default": "By hand|3\nWith templates|9\nTemplates and an agent|24", "description": "One bar per line, written as Label|Value. Up to eight bars."}, {"id": "prefix", "type": "string", "group": "Content", "label": "Value prefix", "default": "", "description": "Shown before each value, such as $."}, {"id": "suffix", "type": "string", "group": "Content", "label": "Value suffix", "default": "", "description": "Shown after each value, such as % or k."}, {"id": "source", "type": "string", "group": "Content", "label": "Footnote (blank hides)", "default": "Example data"}, {"id": "highlight", "type": "enum", "group": "Content", "label": "Accent bar", "default": "max", "options": [{"value": "max", "label": "Largest value"}, {"value": "last", "label": "Last bar"}, {"value": "all", "label": "All bars"}]}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "growSeconds", "type": "number", "group": "Timing", "label": "Seconds per bar", "default": 1, "min": 0.2, "max": 5, "step": 0.1}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Bar Race {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+        padding: 0 8%; box-sizing: border-box; gap: 0; }
+      .title { font-family: var(--serif); font-weight: 700; font-size: 84px; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 56px; }
+      .rows { display: flex; flex-direction: column; gap: var(--gap, 34px); }
+      .label { font-weight: 700; font-size: var(--labelPx, 32px); margin-bottom: 12px;
+        color: color-mix(in srgb, var(--textColor) 72%, transparent); }
+      .track { position: relative; height: var(--barPx, 64px); }
+      .track::before { content: ""; position: absolute; inset: 0; right: 0; border-radius: 8px;
+        background: color-mix(in srgb, var(--textColor) 7%, transparent); }
+      .fill { position: absolute; left: 0; top: 0; bottom: 0; width: var(--end); border-radius: 8px; transform-origin: 0 50%;
+        background: color-mix(in srgb, var(--textColor) 28%, transparent); }
+      .fill.hot { background: var(--accentColor); }
+      .value { position: absolute; top: 50%; left: calc(var(--end) * var(--p, 1)); margin-left: 18px; transform: translateY(-50%); white-space: nowrap;
+        font-family: var(--serif); font-weight: 700; font-size: calc(var(--barPx, 64px) * .72); font-variant-numeric: tabular-nums; }
+      .value.hot { color: var(--accentColor); }
+      .source { margin-top: 48px; font-weight: 600; font-size: 28px; color: color-mix(in srgb, var(--textColor) 50%, transparent); }
+      html[data-size="wide"] .title { font-size: 80px; margin-bottom: 44px; }
+      html[data-size="wide"] .stage { padding: 0 12%; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="bar-race" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="title" id="title"></div>
+        <div class="rows" id="rows"></div>
+        <div class="source" id="source"></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const title = document.getElementById("title"), source = document.getElementById("source");
+      title.textContent = String(vars.title ?? "Posts shipped per week").trim();
+      source.textContent = String(vars.source ?? "Example data").trim();
+      if (!title.textContent) title.remove();
+      if (!source.textContent) source.remove();
+      const prefix = String(vars.prefix ?? ""), suffix = String(vars.suffix ?? "");
+      let data = String(vars.bars ?? "By hand|3\nWith templates|9\nTemplates and an agent|24").split(/\r?\n/)
+        .map(l => l.split("|")).filter(p => p.length >= 2 && p[0].trim())
+        .map(([label, value]) => { const raw = String(value).trim().replace(/,/g, "");
+          return { label: label.trim(), value: Math.max(0, parseFloat(raw) || 0), decimals: (raw.split(".")[1] || "").length }; })
+        .slice(0, 8);
+      if (!data.length) data = [{ label: "Add bars as Label|Value", value: 1, decimals: 0 }];
+      const max = Math.max(...data.map(d => d.value)) || 1;
+      const hotIndex = vars.highlight === "last" ? data.length - 1 : data.findIndex(d => d.value === max);
+      // Bars and gaps shrink as the list grows so up to eight fit any size.
+      const barPx = Math.max(30, Math.min(90, (H * .52) / data.length * .55));
+      root.style.setProperty("--barPx", barPx + "px");
+      root.style.setProperty("--gap", Math.max(16, barPx * .5) + "px");
+      root.style.setProperty("--labelPx", Math.max(22, Math.min(40, barPx * .5)) + "px");
+      const rowsEl = document.getElementById("rows");
+      const fmt = (v, d) => prefix + Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + suffix;
+      const rows = data.map((d, i) => {
+        const hot = vars.highlight === "all" || i === hotIndex;
+        const row = document.createElement("div");
+        row.innerHTML = `<div class="label"></div><div class="track"><div class="fill${hot ? " hot" : ""}"></div><div class="value${hot ? " hot" : ""}"></div></div>`;
+        row.querySelector(".label").textContent = d.label;
+        const fill = row.querySelector(".fill"), value = row.querySelector(".value");
+        value.textContent = fmt(d.value, d.decimals);
+        rowsEl.appendChild(row);
+        return { row, fill, value, d };
+      });
+
+      // The longest bar stops short of the track end, leaving room for the widest value.
+      // Widths are CSS variables, so a refit after fonts load never fights the tweens.
+      const fit = () => {
+        const track = rowsEl.querySelector(".track").clientWidth || W * .8;
+        const widest = Math.max(...rows.map(r => r.value.scrollWidth));
+        const reach = Math.max(.4, Math.min(.8, 1 - (widest + 30) / track));
+        rows.forEach(r => r.row.style.setProperty("--end", r.d.value / max * reach * 100 + "%"));
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const room = Math.max(.6, total - exit - .9);
+      let grow = num(vars.growSeconds, 1, .2, 5), step = grow * .45;
+      if ((data.length - 1) * step + grow > room) { const k = room / ((data.length - 1) * step + grow); grow *= k; step *= k; }
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      if (title.isConnected) tl.fromTo(title, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .6, ease: "power3.out" }, 0);
+      rows.forEach((r, i) => {
+        const at = .35 + i * step;
+        tl.fromTo(r.row, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .45, ease: "power3.out" }, at - .15);
+        tl.fromTo(r.fill, { scaleX: 0 }, { scaleX: 1, duration: grow, ease: "power3.out" }, at);
+        // Same duration and ease as the bar, so the value rides its end.
+        tl.fromTo(r.value, { "--p": 0 }, { "--p": 1, duration: grow, ease: "power3.out" }, at);
+        tl.fromTo(r.value, { innerText: 0 }, { innerText: r.d.value, duration: grow, ease: "power3.out",
+          modifiers: { innerText: v => fmt(v, r.d.decimals) } }, at);
+      });
+      if (source.isConnected) tl.fromTo(source, { opacity: 0 }, { opacity: 1, duration: .5, ease: "none" }, .35 + (rows.length - 1) * step + grow * .6);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["bar-race"] = tl;
+    </script>
+  </body>
+</html>

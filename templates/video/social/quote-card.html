@@ -1,0 +1,127 @@
+<!doctype html>
+<!--
+  QUOTE CARD · video / social
+  A testimonial or pull quote. The quote mark drops in, the words rise one at
+  a time out of a soft blur, a rule draws, and the speaker slides up with their
+  photo (or initials) and an optional star rating.
+  One tween per word and per element; the word stagger is fixed, never random.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "quote", "type": "string", "group": "Content", "label": "Quote", "default": "We replaced three tools and a freelancer with one folder of templates."}, {"id": "name", "type": "string", "group": "Content", "label": "Name", "default": "Alex Rivera"}, {"id": "role", "type": "string", "group": "Content", "label": "Role (blank hides)", "default": "Head of Content, Northwind"}, {"id": "photoImage", "type": "string", "group": "Content", "label": "Photo (blank shows initials)", "default": ""}, {"id": "stars", "type": "number", "group": "Content", "label": "Star rating (0 hides)", "default": 5, "min": 0, "max": 5, "step": 1}, {"id": "highlight", "type": "string", "group": "Content", "label": "Words to highlight", "default": "one folder", "description": "Any words from the quote to set in the accent color. Separate several with a | character."}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 50, "max": 160, "step": 5, "description": "Long quotes shrink to fit automatically."}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "wordSeconds", "type": "number", "group": "Timing", "label": "Seconds between words", "default": 0.07, "min": 0.01, "max": 0.5, "step": 0.01}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 6, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Quote Card {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Lora:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+        padding: 0 10%; box-sizing: border-box; }
+      .mark { font-family: Georgia, "Times New Roman", serif; font-weight: 700; color: var(--accentColor);
+        line-height: .6; height: .42em; margin-bottom: 30px; transform-origin: 0 100%; }
+      .stars { display: flex; gap: 10px; margin-bottom: 28px; }
+      .stars svg { width: 40px; height: 40px; fill: var(--accentColor); }
+      .quote { font-family: var(--serif); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+      .quote .w { display: inline-block; white-space: pre; }
+      .quote .hl { color: var(--accentColor); }
+      .rule { width: 110px; height: 8px; background: var(--accentColor); margin: 46px 0 34px; transform-origin: 0 50%; }
+      .who { display: flex; align-items: center; gap: 26px; }
+      .avatar { flex: none; width: 112px; height: 112px; border-radius: 50%; overflow: hidden; background: var(--accentColor);
+        color: var(--bgColor); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 40px; }
+      .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .name { font-weight: 800; font-size: 40px; letter-spacing: -0.01em; }
+      .role { font-weight: 600; font-size: 30px; margin-top: 4px; color: color-mix(in srgb, var(--textColor) 62%, transparent); }
+      html[data-size="wide"] .stage { padding: 0 14%; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="quote-card" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="6" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="6" data-duration-var="durationSeconds" data-track-index="1">
+        <div id="content">
+        <div class="mark" id="mark">&ldquo;</div>
+        <div class="stars" id="stars"></div>
+        <div class="quote" id="quote"></div>
+        <div class="rule" id="rule"></div>
+        <div class="who" id="who">
+          <div class="avatar" id="avatar"><img id="photo" data-var-src="photoImage" alt="" /></div>
+          <div><div class="name" id="name"></div><div class="role" id="role"></div></div>
+        </div>
+        </div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const quoteText = String(vars.quote ?? "We replaced three tools and a freelancer with one folder of templates.").trim() || "Your quote";
+      const name = String(vars.name ?? "Alex Rivera").trim();
+      document.getElementById("name").textContent = name;
+      const role = document.getElementById("role");
+      role.textContent = String(vars.role ?? "Head of Content, Northwind").trim();
+      if (!role.textContent) role.remove();
+      const photo = String(vars.photoImage ?? "").trim(), avatar = document.getElementById("avatar");
+      if (photo && !/placeholder/.test(photo)) document.getElementById("photo").src = photo;
+      else avatar.textContent = name.split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0].toUpperCase()).join("") || "★";
+      const starCount = Math.round(num(vars.stars, 5, 0, 5)), starsEl = document.getElementById("stars");
+      for (let i = 0; i < starCount; i++) starsEl.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.2 6.6.7-5 4.5 1.4 6.6L12 17.2l-5.9 3.3 1.4-6.6-5-4.5 6.6-.7z"/></svg>');
+      if (!starCount) starsEl.remove();
+
+      // Mark highlighted phrases: find each phrase in the word list and flag its words.
+      const words = quoteText.split(/\s+/);
+      const hot = new Set();
+      String(vars.highlight ?? "one folder").split("|").map(s => s.trim().toLowerCase()).filter(Boolean).forEach(ph => {
+        const pw = ph.split(/\s+/), clean = w => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
+        for (let i = 0; i + pw.length <= words.length; i++)
+          if (pw.every((p, j) => clean(words[i + j]) === clean(p))) pw.forEach((_, j) => hot.add(i + j));
+      });
+      const quote = document.getElementById("quote");
+      const spans = words.map((w, i) => { const s = document.createElement("span");
+        s.className = "w" + (hot.has(i) ? " hl" : ""); s.textContent = w + (i < words.length - 1 ? " " : ""); quote.appendChild(s); return s; });
+
+      // Size from the quote length, then shrink until the block fits the frame height.
+      const base = Math.min(W * .075, H * .085) * Math.max(.55, Math.min(1.25, 14 / Math.sqrt(words.length + 6) / 3.4)) * num(vars.typeScale, 100, 50, 160) / 100;
+      const fit = () => {
+        let size = base;
+        quote.style.fontSize = size + "px";
+        const content = document.getElementById("content"), limit = H * .86;
+        for (let i = 0; i < 12 && content.offsetHeight > limit; i++) { size *= .92; quote.style.fontSize = size + "px"; }
+        document.getElementById("mark").style.fontSize = Math.max(140, size * 2.6) + "px";
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 6, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      let per = num(vars.wordSeconds, .07, .01, .5);
+      const room = Math.max(.5, total - exit - 2.2);
+      if (per * words.length > room) per = room / words.length;
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#mark", { scale: 0, rotation: -12, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: .6, ease: "back.out(2.4)" }, 0);
+      if (starsEl.isConnected) tl.fromTo(starsEl.children, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .35, ease: "back.out(3)", stagger: .07 }, .2);
+      const wordsAt = .45;
+      tl.fromTo(spans, { opacity: 0, y: 26, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: .5, ease: "power3.out", stagger: per }, wordsAt);
+      const after = wordsAt + per * words.length + .25;
+      tl.fromTo("#rule", { scaleX: 0 }, { scaleX: 1, duration: .5, ease: "power3.out" }, after);
+      tl.fromTo("#who", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .6, ease: "power3.out" }, after + .15);
+      tl.fromTo("#avatar", { scale: .6 }, { scale: 1, duration: .6, ease: "back.out(2)" }, after + .15);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["quote-card"] = tl;
+    </script>
+  </body>
+</html>

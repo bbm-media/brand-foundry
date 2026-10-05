@@ -1,6 +1,6 @@
 ---
 name: brand-foundry
-description: Make branded images, carousels, stat cards, lower thirds, logo reveals and video overlays from reusable templates, rendered locally to PNG, MP4 or transparent MOV. Use whenever someone asks for a poster, carousel slide, social graphic, quote or stat card, thumbnail, title or logo animation, video overlay, or any branded asset that should be reusable rather than one-off. Also use to create a new template, add a category, rebrand the studio, or diagnose a template that is not appearing.
+description: Make branded images, carousels, stat cards, lower thirds, logo reveals and video overlays from reusable templates, rendered locally to PNG, MP4 or transparent MOV. Use whenever someone asks for a poster, carousel slide, social graphic, quote or stat card, thumbnail, title or logo animation, kinetic typography, video transition, product demo shot, animated chart, end card, video overlay, or any branded asset that should be reusable rather than one-off. Also use to create a new template, add a category, rebrand the studio, or diagnose a template that is not appearing.
 license: MIT
 compatibility: Runs a local Brand Foundry server. Needs Node.js 22+, Chrome for PNG export, and FFmpeg for video. The agent needs a terminal and access to localhost.
 metadata:

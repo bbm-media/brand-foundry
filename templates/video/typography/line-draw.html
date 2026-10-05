@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  LINE DRAW · video / typography
+  The letters are traced as outlines first, like a pen drawing them, then the
+  fill floods in and the outline fades. An underline draws itself last.
+  Built on SVG text: stroke-dasharray is a fixed length per glyph and the
+  dashoffset tweens to 0, so every glyph draws at once from its own start point.
+  Stroke, fill and underline are separate properties, so no two tweens collide.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "line1", "type": "string", "group": "Content", "label": "Line 1", "default": "Made by hand."}, {"id": "line2", "type": "string", "group": "Content", "label": "Line 2 (blank hides)", "default": "Rendered by code."}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 180, "step": 5}, {"id": "keepOutline", "type": "boolean", "group": "Content", "label": "Keep the outline", "default": false, "description": "Leave a thin outline on the letters after the fill arrives."}, {"id": "underline", "type": "boolean", "group": "Content", "label": "Draw an underline", "default": true}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Fill", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Pen", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": "", "description": "Serif and heavy display faces trace best."}, {"id": "drawSeconds", "type": "number", "group": "Timing", "label": "Draw seconds", "default": 1.6, "min": 0.3, "max": 6, "step": 0.1}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Line Draw {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden; background: var(--bgColor); }
+      svg.art { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+      .t { font-family: var(--serif); font-weight: 700; letter-spacing: -0.01em;
+        fill: var(--textColor); stroke: var(--accentColor); stroke-linejoin: round; stroke-linecap: round;
+        fill-opacity: 0; paint-order: stroke;
+        stroke-dasharray: var(--dash) var(--dash); stroke-dashoffset: calc(var(--draw, 1) * var(--dash)); }
+      .u { fill: none; stroke: var(--accentColor); stroke-linecap: round;
+        stroke-dasharray: var(--dash) var(--dash); stroke-dashoffset: calc(var(--draw, 1) * var(--dash)); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="line-draw" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0">
+        <svg class="art" id="art" viewBox="0 0 {{WIDTH}} {{HEIGHT}}" aria-hidden="true">
+          <text class="t" id="t1" text-anchor="middle"></text>
+          <text class="t" id="t2" text-anchor="middle"></text>
+          <path class="u" id="u" d="M0 0"></path>
+        </svg>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      const on = (v, f) => v === undefined || v === "" ? f : v === true || v === "true";
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const t1 = document.getElementById("t1"), t2 = document.getElementById("t2"), u = document.getElementById("u");
+      t1.textContent = String(vars.line1 ?? "Made by hand.").trim() || "Your title";
+      t2.textContent = String(vars.line2 ?? "Rendered by code.").trim();
+      if (!t2.textContent) t2.remove();
+      if (!on(vars.underline, true)) u.remove();
+      const texts = [t1, t2].filter(t => t.isConnected);
+      const base = Math.min(W * .14, H * .15) * num(vars.typeScale, 100, 40, 180) / 100;
+      let fontPx = base;
+      const fit = () => {
+        texts.forEach(t => t.setAttribute("font-size", base));
+        const widest = Math.max(...texts.map(t => t.getComputedTextLength()));
+        fontPx = widest > W * .84 ? base * W * .84 / widest : base;
+        const lead = fontPx * 1.12, top = H / 2 - (texts.length - 1) * lead / 2 + fontPx * .34;
+        texts.forEach((t, i) => {
+          t.setAttribute("font-size", fontPx); t.setAttribute("x", W / 2); t.setAttribute("y", top + i * lead);
+          t.style.strokeWidth = Math.max(2, fontPx * .028) + "px";
+          // One dash longer than any glyph outline: hidden at offset = dash, drawn at 0.
+          // The tween drives --draw from 1 to 0, so a refit after fonts load stays in sync.
+          t.style.setProperty("--dash", fontPx * 6 + "px");
+        });
+        if (u.isConnected) {
+          const len = Math.min(W * .6, texts[texts.length - 1].getComputedTextLength() * .7);
+          const y = top + (texts.length - 1) * lead + fontPx * .32, x0 = W / 2 - len / 2;
+          // A slightly bowed stroke reads as drawn, not ruled.
+          u.setAttribute("d", `M${x0} ${y + 6} Q${W / 2} ${y - fontPx * .1} ${x0 + len} ${y}`);
+          u.style.strokeWidth = Math.max(4, fontPx * .07) + "px";
+          u.style.setProperty("--dash", u.getTotalLength() + 1 + "px");
+        }
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 4, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const draw = Math.min(num(vars.drawSeconds, 1.6, .3, 6), Math.max(.3, total - exit - 1.2));
+      const keep = on(vars.keepOutline, false);
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      texts.forEach((t, i) => {
+        const at = i * .25;
+        tl.fromTo(t, { "--draw": 1 }, { "--draw": 0, duration: draw, ease: "power2.inOut" }, at);
+        tl.fromTo(t, { fillOpacity: 0 }, { fillOpacity: 1, duration: .5, ease: "power1.out" }, at + draw * .8);
+        if (!keep) tl.fromTo(t, { strokeOpacity: 1 }, { strokeOpacity: 0, duration: .5, ease: "power1.out" }, at + draw * .8 + .25);
+      });
+      if (u.isConnected) tl.fromTo(u, { "--draw": 1 }, { "--draw": 0, duration: .6, ease: "power3.out" }, (texts.length - 1) * .25 + draw * .85);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["line-draw"] = tl;
+    </script>
+  </body>
+</html>

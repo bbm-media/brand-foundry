@@ -1,0 +1,114 @@
+<!doctype html>
+<!--
+  WORD DRUM · video / typography
+  "Built for creators / agents / teams": a fixed line on top, and a 3D drum
+  underneath that rolls to each word in turn and lands on the last one.
+  The words sit on the faces of a CSS 3D cylinder. Only the drum's rotationX is
+  tweened, one step per word, so every frame is a pure function of time.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "prefix", "type": "string", "group": "Content", "label": "Fixed line (blank hides)", "default": "Templates for"}, {"id": "words", "type": "string", "group": "Content", "label": "Rolling words", "default": "creators|agents|teams|your brand", "description": "Separate them with a | character. The drum lands on the last one."}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 180, "step": 5}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Fixed line", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Rolling words", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "holdSeconds", "type": "number", "group": "Timing", "label": "Seconds per word", "default": 0.8, "min": 0.2, "max": 5, "step": 0.05, "description": "Speeds up automatically if the words do not fit in the total length."}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Word Drum {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .prefix, .face { font-family: var(--serif); font-weight: 700; letter-spacing: -0.025em; white-space: nowrap; line-height: 1; }
+      .window { position: relative; perspective: 1400px;
+        -webkit-mask-image: linear-gradient(transparent 4%, #000 36%, #000 64%, transparent 96%);
+        mask-image: linear-gradient(transparent 4%, #000 36%, #000 64%, transparent 96%); }
+      .drum { position: absolute; inset: 0; transform-style: preserve-3d; }
+      .face { position: absolute; left: 0; right: 0; top: 50%; text-align: center; color: var(--accentColor);
+        backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="word-drum" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="prefix" id="prefix"></div>
+        <div class="window" id="window"><div class="drum" id="drum"></div></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const prefix = document.getElementById("prefix");
+      prefix.textContent = String(vars.prefix ?? "Templates for").trim();
+      if (!prefix.textContent) prefix.remove();
+      let words = String(vars.words ?? "creators|agents|teams|your brand").split("|").map(s => s.trim()).filter(Boolean);
+      if (!words.length) words = ["your words"];
+      // The cylinder needs enough faces to read as round. Extra faces repeat the list
+      // but are never landed on.
+      const faces = Math.max(6, words.length + 2);
+      const step = 360 / faces;
+      const drum = document.getElementById("drum"), win = document.getElementById("window");
+      const els = Array.from({ length: faces }, (_, i) => {
+        const f = document.createElement("div"); f.className = "face";
+        f.textContent = words[i % words.length]; drum.appendChild(f); return f;
+      });
+      const base = Math.min(W * .12, H * .12) * num(vars.typeScale, 100, 40, 180) / 100;
+      const fit = () => {
+        let size = base;
+        const probe = (s) => { els.forEach(f => f.style.fontSize = s + "px"); if (prefix.isConnected) prefix.style.fontSize = s + "px";
+          return Math.max(...els.map(f => f.scrollWidth), prefix.isConnected ? prefix.scrollWidth : 0); };
+        const widest = probe(size);
+        if (widest > W * .86) size = size * W * .86 / widest;
+        probe(size);
+        const faceH = size * 1.2, radius = faceH / 2 / Math.tan(Math.PI / faces);
+        Object.assign(win.style, { width: W * .9 + "px", height: faceH * 2.2 + "px", marginTop: prefix.isConnected ? size * .05 + "px" : "0" });
+        els.forEach((f, i) => {
+          f.style.height = faceH + "px"; f.style.lineHeight = faceH + "px"; f.style.marginTop = -faceH / 2 + "px";
+          // Faces go "downward" around the drum so rolling up reveals the next word.
+          f.style.transform = `rotateX(${-i * step}deg) translateZ(${radius}px)`;
+        });
+        drum.style.transformOrigin = `50% 50% 0`;
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const intro = .6;
+      const roll = Math.min(.55, num(vars.holdSeconds, .8, .2, 5) * .6);
+      let hold = num(vars.holdSeconds, .8, .2, 5);
+      const room = total - exit - intro - .6;
+      if (words.length > 1 && hold * (words.length - 1) > room) hold = Math.max(.25, room / (words.length - 1));
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      if (prefix.isConnected) tl.fromTo(prefix, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .6, ease: "power3.out" }, 0);
+      tl.fromTo(win, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .6, ease: "power3.out" }, .12);
+      // One tween for the whole roll. A custom ease turns its progress into
+      // "hold, then snap to the next face" steps, so the drum's rotation has a
+      // single owner and every frame is a pure function of time.
+      if (words.length > 1) {
+        const n = words.length - 1, snap = gsap.parseEase("back.out(1.6)"), r = Math.min(roll, hold);
+        const stepped = p => {
+          const t = p * n * hold, k = Math.min(n, Math.floor(t / hold + 1e-9)), local = t - k * hold;
+          return (k + (k < n && local > hold - r ? snap((local - (hold - r)) / r) : 0)) / n;
+        };
+        tl.fromTo(drum, { rotationX: 0 }, { rotationX: n * step, duration: n * hold, ease: stepped }, intro);
+      }
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["word-drum"] = tl;
+    </script>
+  </body>
+</html>

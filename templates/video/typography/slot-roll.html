@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  SLOT ROLL · video / typography
+  Every character spins like a slot reel and locks onto its letter, left to
+  right. Works for words ("LAUNCH DAY") and for numbers ("$1.2M", "10X").
+  Each character cell holds a column of filler glyphs ending in the real one;
+  the column slides up with translateY, so any frame renders in any order. The
+  filler glyphs come from a fixed seed, never Math.random().
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "headline", "type": "string", "group": "Content", "label": "Headline", "default": "LAUNCH DAY"}, {"id": "caption", "type": "string", "group": "Content", "label": "Caption (blank hides)", "default": "Brand Foundry 1.0 is live"}, {"id": "reel", "type": "enum", "group": "Content", "label": "Filler characters", "default": "match", "options": [{"value": "match", "label": "Match each character"}, {"value": "letters", "label": "Letters"}, {"value": "digits", "label": "Digits"}]}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 180, "step": 5}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "spinSeconds", "type": "number", "group": "Timing", "label": "Spin seconds", "default": 1.4, "min": 0.3, "max": 6, "step": 0.1, "description": "How long each reel spins before it locks."}, {"id": "spinStagger", "type": "number", "group": "Timing", "label": "Delay between characters", "default": 0.07, "min": 0, "max": 0.5, "step": 0.01}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Slot Roll {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 34px; }
+      .word { display: flex; font-family: var(--serif); font-weight: 700; line-height: 1;
+        letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .cell { position: relative; overflow: hidden; height: 1.12em; display: inline-block; }
+      .reel { display: flex; flex-direction: column; align-items: center; }
+      .reel span { display: block; height: 1.12em; line-height: 1.12em; color: var(--accentColor); }
+      .reel span:last-child { color: var(--textColor); }
+      .space { width: .32em; }
+      .caption { font-weight: 600; font-size: 40px; color: color-mix(in srgb, var(--textColor) 70%, transparent); }
+      html[data-size="wide"] .caption { font-size: 36px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="slot-roll" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="word" id="word"></div>
+        <div class="caption" id="caption"></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const headline = String(vars.headline ?? "LAUNCH DAY").trim() || "LAUNCH DAY";
+      const caption = document.getElementById("caption");
+      caption.textContent = String(vars.caption ?? "Brand Foundry 1.0 is live").trim();
+      if (!caption.textContent) caption.remove();
+
+      // Fixed-seed generator: the same headline always spins through the same glyphs.
+      let seed = 7;
+      const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+      const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", LOWER = "abcdefghijklmnopqrstuvwxyz", DIGITS = "0123456789";
+      const pool = ch => vars.reel === "letters" ? LETTERS : vars.reel === "digits" ? DIGITS
+        : /\d/.test(ch) ? DIGITS : /[a-z]/.test(ch) ? LOWER : LETTERS;
+      const STEPS = 14;
+      const word = document.getElementById("word");
+      const reels = [];
+      [...headline].forEach((ch, i) => {
+        if (ch === " ") { const s = document.createElement("span"); s.className = "space"; word.appendChild(s); return; }
+        const cell = document.createElement("span"); cell.className = "cell";
+        const reel = document.createElement("span"); reel.className = "reel";
+        const spin = /[A-Za-z0-9]/.test(ch);
+        const glyphs = spin ? Array.from({ length: STEPS }, () => { const p = pool(ch); return p[Math.floor(rand() * p.length)]; }) : [];
+        // A blank first slot means frame 0 is empty and the letters spin up into view.
+        for (const g of spin ? [" ", ...glyphs, ch] : [ch]) { const s = document.createElement("span"); s.textContent = g; reel.appendChild(s); }
+        cell.appendChild(reel); word.appendChild(cell);
+        reels.push({ cell, reel, steps: spin ? glyphs.length + 1 : 0 });
+      });
+      const base = Math.min(W * .15, H * .2) * num(vars.typeScale, 100, 40, 180) / 100;
+      const fit = () => {
+        // The reel is a centered flex column, so its last glyph reports its own width.
+        const sizeCells = () => reels.forEach(r => { r.cell.style.width = r.reel.lastChild.offsetWidth + "px"; });
+        word.style.fontSize = base + "px"; sizeCells();
+        const avail = W * .86;
+        if (word.scrollWidth > avail) { word.style.fontSize = base * avail / word.scrollWidth + "px"; sizeCells(); }
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 4, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const stagger = num(vars.spinStagger, .07, 0, .5);
+      const spin = Math.min(num(vars.spinSeconds, 1.4, .3, 6), Math.max(.3, total - exit - stagger * reels.length - .4));
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      reels.forEach((r, i) => {
+        // Punctuation does not spin; it fades in as its neighbours lock.
+        if (!r.steps) { tl.fromTo(r.cell, { opacity: 0 }, { opacity: 1, duration: .2, ease: "none" }, i * stagger + spin * .6); return; }
+        // yPercent of the reel's own height: the last glyph sits at -(steps/(steps+1)).
+        tl.fromTo(r.reel, { yPercent: 0 }, { yPercent: -100 * r.steps / (r.steps + 1), duration: spin, ease: "back.out(1.1)" }, i * stagger);
+      });
+      const landed = (reels.length - 1) * stagger + spin;
+      if (caption.isConnected) tl.fromTo(caption, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: .5, ease: "power3.out" }, landed - .15);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["slot-roll"] = tl;
+    </script>
+  </body>
+</html>

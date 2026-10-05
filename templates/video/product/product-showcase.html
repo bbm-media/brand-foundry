@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  PRODUCT SHOWCASE · video / product
+  The launch-video hero shot: your screenshot swings in on a 3D tilt, a light
+  sweep crosses the glass, and feature callouts pop out around it.
+  The tilt (entrance), the slow drift and the light sweep each live on their
+  own element, so no property is tweened twice. Swap the screenshot for any
+  PNG, JPG or SVG.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "screenshotImage", "type": "string", "group": "Content", "label": "Screenshot", "default": "assets/sample-app.svg", "description": "Any screenshot or product image. Wide images work best."}, {"id": "eyebrow", "type": "string", "group": "Content", "label": "Eyebrow (blank hides)", "default": "New in 1.0"}, {"id": "headline", "type": "string", "group": "Content", "label": "Headline", "default": "Your whole brand, one click away"}, {"id": "subline", "type": "string", "group": "Content", "label": "Subline (blank hides)", "default": "Set it once. Every template follows."}, {"id": "callouts", "type": "string", "group": "Content", "label": "Callouts", "default": "Brand set once|Every size at once|MP4 and transparent MOV", "description": "Up to three short callouts. Separate them with a | character. Leave blank to hide them."}, {"id": "tilt", "type": "number", "group": "Motion", "label": "Tilt (degrees)", "default": 12, "min": 0, "max": 30, "step": 1}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Product Showcase {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      #root::before { content: ""; position: absolute; inset: 0; opacity: var(--gridOpacity, 1);
+        background: radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--accentColor) 16%, transparent), transparent 60%); }
+      .stage { position: absolute; inset: 0; display: grid; box-sizing: border-box; }
+      html[data-size="wide"] .stage { grid-template-columns: 38fr 62fr; align-items: center; padding: 0 5% 0 7%; gap: 4%; }
+      html:not([data-size="wide"]) .stage { grid-template-rows: auto auto; align-content: center; padding: 0 7%; gap: 120px; }
+      .copy { display: flex; flex-direction: column; gap: 22px; }
+      html:not([data-size="wide"]) .copy { align-items: center; text-align: center; }
+      .eyebrow { font-weight: 800; font-size: 26px; letter-spacing: .22em; text-transform: uppercase; color: var(--accentColor); }
+      .headline { font-family: var(--serif); font-weight: 700; font-size: 96px; line-height: 1.02; letter-spacing: -0.03em; }
+      .subline { font-weight: 600; font-size: 34px; line-height: 1.3; color: color-mix(in srgb, var(--textColor) 66%, transparent); }
+      .area { position: relative; align-self: center; justify-self: center; width: 100%; perspective: 2200px; }
+      .drift, .tilt { transform-style: preserve-3d; }
+      .card { position: relative; border-radius: 20px; overflow: hidden; background: #fff;
+        box-shadow: 0 50px 120px -30px rgba(10,12,20,.45), 0 0 0 1px rgba(10,12,20,.06); }
+      .card img { display: block; width: 100%; height: auto; }
+      .shine { position: absolute; top: -20%; bottom: -20%; width: 34%; left: 0;
+        background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); }
+      .chip { position: absolute; display: flex; align-items: center; gap: 14px; padding: 18px 26px; border-radius: 999px;
+        background: var(--bgColor); color: var(--textColor); font-weight: 700; font-size: 28px; white-space: nowrap;
+        box-shadow: 0 18px 40px -12px rgba(10,12,20,.35), 0 0 0 1px rgba(10,12,20,.06); }
+      .chip::before { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--accentColor);
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--accentColor) 22%, transparent); }
+      html[data-size="half"] .headline { font-size: 72px; }
+      html[data-size="half"] .chip { font-size: 24px; padding: 14px 22px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="product-showcase" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="copy">
+          <div class="eyebrow" id="eyebrow"></div>
+          <div class="headline" id="headline"></div>
+          <div class="subline" id="subline"></div>
+        </div>
+        <div class="area" id="area">
+          <div class="drift" id="drift"><div class="tilt" id="tilt">
+            <div class="card" id="card"><img id="shot" data-var-src="screenshotImage" src="assets/sample-app.svg" alt="" /><div class="shine" id="shine"></div></div>
+          </div></div>
+        </div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}}, wide = W > H;
+
+      const shot = String(vars.screenshotImage ?? "").trim();
+      if (shot) document.getElementById("shot").src = shot;
+      const set = (id, key, f) => { const el = document.getElementById(id); el.textContent = String(vars[key] ?? f).trim(); if (!el.textContent) el.remove(); return el; };
+      const eyebrow = set("eyebrow", "eyebrow", "New in 1.0");
+      const headline = set("headline", "headline", "Your whole brand, one click away");
+      const subline = set("subline", "subline", "Set it once. Every template follows.");
+      const area = document.getElementById("area");
+      const calls = String(vars.callouts ?? "Brand set once|Every size at once|MP4 and transparent MOV").split("|").map(s => s.trim()).filter(Boolean).slice(0, 3);
+      // Callout anchors as fractions of the card area: top left, right middle, bottom left.
+      const anchors = wide ? [[-.04, .06, "left"], [1.02, .44, "right"], [.08, .9, "left"]] : [[-.03, -.06, "left"], [1.03, .42, "right"], [-.03, .92, "left"]];
+      const chips = calls.map((t, i) => {
+        const c = document.createElement("div"); c.className = "chip"; c.textContent = t; area.appendChild(c);
+        const [x, y, side] = anchors[i];
+        Object.assign(c.style, side === "right" ? { right: (1 - x) * 100 + "%" } : { left: x * 100 + "%" }, { top: y * 100 + "%" });
+        return c;
+      });
+      const fit = () => {
+        if (!headline.isConnected) return;
+        // Keep long headlines to three lines in the copy column.
+        const base = wide ? 96 : W < H * .7 ? 92 : 72;
+        headline.style.fontSize = base + "px";
+        const lh = parseFloat(getComputedStyle(headline).lineHeight) || base;
+        if (headline.scrollHeight > lh * 3.2) headline.style.fontSize = base * .82 + "px";
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const tilt = num(vars.tilt, 12, 0, 30);
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      [eyebrow, headline, subline].filter(e => e.isConnected).forEach((el, i) =>
+        tl.fromTo(el, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: .7, ease: "power3.out" }, .1 + i * .12));
+      // Entrance: from steep and far to a gentle hero angle.
+      tl.fromTo("#tilt", { rotationX: tilt * 2.4, rotationY: -tilt * 2.2, z: -500, y: 140, opacity: 0 },
+        { rotationX: tilt * .55, rotationY: -tilt, z: 0, y: 0, opacity: 1, duration: 1.3, ease: "power4.out" }, .25);
+      // Drift: a slow turn across the whole clip keeps the hero shot alive.
+      tl.fromTo("#drift", { rotationY: 0, rotationX: 0 }, { rotationY: tilt * .4, rotationX: -tilt * .15, duration: total, ease: "sine.inOut" }, 0);
+      tl.fromTo("#shine", { xPercent: -120 }, { xPercent: 420, duration: 1.1, ease: "power2.inOut" }, 1.25);
+      chips.forEach((c, i) => tl.fromTo(c, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .55, ease: "back.out(2.2)" }, 1.45 + i * .18));
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["product-showcase"] = tl;
+    </script>
+  </body>
+</html>

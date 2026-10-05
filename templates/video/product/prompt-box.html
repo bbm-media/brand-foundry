@@ -1,0 +1,155 @@
+<!doctype html>
+<!--
+  PROMPT BOX · video / product
+  An agent prompt is typed out, sent, thought about, and answered with a stack
+  of result cards. The shot every AI product video needs.
+  Typing reveals one character span per step with tl.set. The caret blink and
+  the thinking dots are single tweens with stepped or wave eases, so each
+  property has one owner and any frame renders on its own.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "eyebrow", "type": "string", "group": "Content", "label": "Eyebrow (blank hides)", "default": "One prompt"}, {"id": "agentName", "type": "string", "group": "Content", "label": "Agent label (blank hides)", "default": "Your agent"}, {"id": "prompt", "type": "string", "group": "Content", "label": "Prompt", "default": "Make a launch carousel and a 15 second teaser in our brand"}, {"id": "results", "type": "string", "group": "Content", "label": "Results", "default": "Carousel, 6 slides, exported|Teaser, 15 seconds, MP4|Transparent title overlay, MOV", "description": "Up to three result lines. Separate them with a | character. Leave blank to end on the sent prompt."}, {"id": "typeSpeed", "type": "number", "group": "Timing", "label": "Typing speed (characters per second)", "default": 34, "min": 5, "max": 120, "step": 1}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 6, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Prompt Box {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans);
+        --surface: color-mix(in srgb, var(--bgColor) 35%, #fff); --line: color-mix(in srgb, var(--textColor) 12%, transparent); }
+      #root::before { content: ""; position: absolute; inset: 0; opacity: var(--gridOpacity, 1);
+        background-image: radial-gradient(color-mix(in srgb, var(--textColor) 14%, transparent) 1.5px, transparent 1.5px);
+        background-size: 34px 34px; }
+      .stack { position: absolute; left: 50%; top: 50%; width: var(--cardW); display: flex; flex-direction: column; gap: 22px;
+        transform: translate(-50%, calc(-50% + var(--lift, 1) * var(--resultsH, 0px) / 2)); }
+      .eyebrow { font-family: var(--serif); font-weight: 700; font-size: 64px; letter-spacing: -0.03em; text-align: center; margin-bottom: 18px; }
+      .card { position: relative; background: var(--surface); border-radius: 32px; padding: 30px 34px 30px;
+        box-shadow: 0 40px 90px -30px rgba(10,12,20,.35), 0 0 0 1.5px var(--line); }
+      .agent { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 24px; padding: 8px 16px;
+        border-radius: 999px; background: color-mix(in srgb, var(--accentColor) 12%, transparent); color: var(--accentColor); }
+      .agent::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accentColor); }
+      .text { font-weight: 500; font-size: 42px; line-height: 1.32; margin: 22px 90px 6px 0; min-height: 1.32em; word-break: break-word; }
+      .text span { display: none; }
+      .text.measure span { display: inline !important; }
+      .caret { display: inline-block; width: 4px; height: 1.1em; margin-left: 3px; vertical-align: -.17em; background: var(--accentColor); }
+      .send { position: absolute; right: 26px; bottom: 26px; width: 76px; height: 76px; border-radius: 50%;
+        background: var(--accentColor); display: flex; align-items: center; justify-content: center; }
+      .send svg { width: 36px; height: 36px; }
+      .ripple { position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--accentColor); opacity: 0; }
+      .dots { display: flex; gap: 12px; padding: 6px 34px; height: 30px; align-items: center; }
+      .dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--accentColor); display: block; }
+      .result { display: flex; align-items: center; gap: 20px; background: var(--surface); border-radius: 22px; padding: 24px 28px;
+        font-weight: 600; font-size: 34px; box-shadow: 0 0 0 1.5px var(--line), 0 18px 40px -24px rgba(10,12,20,.3); }
+      .check { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--accentColor); display: flex; align-items: center; justify-content: center; }
+      .check svg { width: 24px; height: 24px; }
+      html[data-size="full"] .text { font-size: 50px; }
+      html[data-size="full"] .result { font-size: 38px; }
+      html[data-size="full"] .eyebrow { font-size: 84px; }
+      html[data-size="full"] .agent { font-size: 28px; }
+      html[data-size="half"] .text { font-size: 38px; }
+      html[data-size="half"] .result { font-size: 30px; padding: 20px 24px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="prompt-box" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="6" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="6" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0">
+        <div class="stack" id="stack">
+          <div class="eyebrow" id="eyebrow"></div>
+          <div class="card" id="card">
+            <div class="agent" id="agent"></div>
+            <div class="text" id="text"><b class="caret" id="caret"></b></div>
+            <div class="send" id="send"><div class="ripple" id="ripple"></div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
+          </div>
+          <div class="dots" id="dots"><i></i><i></i><i></i></div>
+          <div id="results" style="display:flex;flex-direction:column;gap:16px"></div>
+        </div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+      root.style.setProperty("--cardW", Math.min(W * .86, 1240) + "px");
+
+      const eyebrow = document.getElementById("eyebrow"), agent = document.getElementById("agent");
+      eyebrow.textContent = String(vars.eyebrow ?? "One prompt").trim();
+      agent.textContent = String(vars.agentName ?? "Your agent").trim();
+      if (!eyebrow.textContent) eyebrow.remove();
+      if (!agent.textContent) agent.remove();
+      const prompt = String(vars.prompt ?? "Make a launch carousel and a 15 second teaser in our brand").trim() || "Describe what you want";
+      const text = document.getElementById("text"), caret = document.getElementById("caret");
+      const chars = [...prompt].map(ch => { const s = document.createElement("span"); s.textContent = ch; text.insertBefore(s, caret); return s; });
+      const resultsEl = document.getElementById("results");
+      const results = String(vars.results ?? "Carousel, 6 slides, exported|Teaser, 15 seconds, MP4|Transparent title overlay, MOV")
+        .split("|").map(s => s.trim()).filter(Boolean).slice(0, 3);
+      const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+      const rows = results.map(t => { const r = document.createElement("div"); r.className = "result";
+        r.innerHTML = `<span class="check">${checkSvg}</span><span></span>`; r.lastChild.textContent = t; resultsEl.appendChild(r); return r; });
+      const dots = document.getElementById("dots");
+      if (!rows.length) { resultsEl.remove(); dots.remove(); }
+
+      // The stack starts lifted by half the results' height so the prompt card is centered,
+      // then settles as the results arrive. Measured with all text visible, after fonts load.
+      const fit = () => {
+        // A class, not inline styles: the timeline owns each character's inline display.
+        text.classList.add("measure");
+        const h = rows.length ? dots.offsetHeight + resultsEl.offsetHeight + 44 : 0;
+        root.style.setProperty("--resultsH", h + "px");
+        text.classList.remove("measure");
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 6, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const end = total - exit;
+      const cps = num(vars.typeSpeed, 34, 5, 120);
+      const typeAt = .7;
+      // Fit typing, thinking and results into the clip, typing first.
+      const typeDur = Math.min(chars.length / cps, Math.max(.4, (end - typeAt) * (rows.length ? .45 : .8)));
+      const sendAt = typeAt + typeDur + .25;
+      const thinkDur = rows.length ? Math.min(.9, Math.max(.3, (end - sendAt) * .25)) : 0;
+      const resultsAt = sendAt + .35 + thinkDur;
+      root.dataset.posterTime = String(end - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      if (eyebrow.isConnected) tl.fromTo(eyebrow, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .6, ease: "power3.out" }, 0);
+      tl.fromTo("#card", { opacity: 0, y: 40, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .7, ease: "power3.out" }, .1);
+      chars.forEach((c, i) => tl.set(c, { display: "inline" }, typeAt + typeDur * i / chars.length));
+      // Caret: solid while typing, then blinks. One tween; the ease returns 0 or 1.
+      const blinkFrom = typeAt + typeDur, blinks = Math.max(1, Math.floor((end - blinkFrom) / .5));
+      tl.fromTo(caret, { opacity: 1 }, { opacity: 0, duration: Math.max(.5, end - blinkFrom), ease: p => (Math.floor(p * blinks) % 2 ? 1 : 0) }, blinkFrom);
+      // Button press as one tween: the ease dips to the pressed size, overshoots, settles.
+      const press = p => p < .3 ? Math.sin(p / .3 * Math.PI / 2) : p < .65 ? 1 - 1.33 * Math.sin((p - .3) / .35 * Math.PI / 2) : -.33 * (1 - (p - .65) / .35);
+      tl.fromTo("#send", { scale: 1 }, { scale: .82, duration: .45, ease: press }, sendAt);
+      tl.fromTo("#ripple", { scale: 1, opacity: .7 }, { scale: 1.9, opacity: 0, duration: .6, ease: "power2.out", immediateRender: false }, sendAt + .08);
+      if (rows.length) {
+        // Dots fade in while thinking and out as results land: one tween, shaped by its ease.
+        const dotsSpan = resultsAt + .25 - (sendAt + .25), a = .2 / dotsSpan, b = 1 - .25 / dotsSpan;
+        tl.fromTo(dots, { opacity: 0 }, { opacity: 1, duration: dotsSpan, ease: p => p < a ? p / a : p > b ? Math.max(0, (1 - p) / (1 - b)) : 1 }, sendAt + .25);
+        // Wave ease: each dot rises and falls on its own phase, one tween per dot.
+        [...dots.children].forEach((d, i) => tl.fromTo(d, { y: 0 }, { y: -14, duration: thinkDur + .4,
+          ease: p => Math.max(0, Math.sin((p * (thinkDur + .4) / .55) * Math.PI * 2 - i * .9)) }, sendAt + .25));
+        tl.fromTo("#stack", { "--lift": 1 }, { "--lift": 0, duration: .8, ease: "power3.inOut" }, resultsAt - .3);
+        rows.forEach((r, i) => tl.fromTo(r, { opacity: 0, y: 30, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: .55, ease: "back.out(1.6)" }, resultsAt + i * .22));
+      }
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["prompt-box"] = tl;
+    </script>
+  </body>
+</html>

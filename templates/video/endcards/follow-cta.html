@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  FOLLOW CTA · video / endcards
+  The end card. Your logo and line land, then a cursor glides in and clicks
+  the button: it presses, ripples, and flips to its "done" state.
+  The cursor's travel is a constant offset from wherever the button sits, so it
+  always lands on target even after fonts load and the layout settles. Press,
+  ripple and label swap are separate elements, one tween per property.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "logoImage", "type": "string", "group": "Content", "label": "Logo (blank hides)", "default": ""}, {"id": "headline", "type": "string", "group": "Content", "label": "Headline", "default": "Follow for more"}, {"id": "handle", "brandKey": "handle", "type": "string", "group": "Content", "label": "Handle (blank hides)", "default": "@yourhandle"}, {"id": "button", "type": "string", "group": "Content", "label": "Button", "default": "Follow"}, {"id": "buttonDone", "type": "string", "group": "Content", "label": "Button after the click", "default": "Following"}, {"id": "footnote", "type": "string", "group": "Content", "label": "Footnote (blank hides)", "default": "New templates every week"}, {"id": "showCursor", "type": "boolean", "group": "Content", "label": "Animate the cursor click", "default": true}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Button", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "clickAt", "type": "number", "group": "Timing", "label": "Click at (seconds)", "default": 2.2, "min": 0.8, "max": 60, "step": 0.1}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Follow CTA {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; padding: 0 8%; box-sizing: border-box; }
+      .logo { max-width: 260px; max-height: 160px; object-fit: contain; margin-bottom: 44px; }
+      .headline { font-family: var(--serif); font-weight: 700; font-size: 104px; line-height: 1.02; letter-spacing: -0.035em; }
+      .handle { font-weight: 700; font-size: 44px; margin-top: 22px; color: color-mix(in srgb, var(--textColor) 70%, transparent); }
+      .btn { position: relative; margin-top: 54px; height: 104px; padding: 0 64px; border-radius: 999px;
+        display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 42px; color: #fff; }
+      .btn .bg { position: absolute; inset: 0; border-radius: inherit; background: var(--accentColor); }
+      .btn .bgDone { position: absolute; inset: 0; border-radius: inherit; background: var(--textColor); opacity: 0; }
+      .btn .ripple { position: absolute; inset: 0; border-radius: inherit; border: 5px solid var(--accentColor); opacity: 0; }
+      .btn .lab { position: relative; display: inline-flex; align-items: center; gap: 14px; white-space: nowrap; }
+      .btn .lab.done { position: absolute; inset: 0; justify-content: center; opacity: 0; }
+      .btn .lab.done svg { width: 38px; height: 38px; }
+      .foot { font-weight: 600; font-size: 30px; margin-top: 34px; color: color-mix(in srgb, var(--textColor) 55%, transparent); }
+      .cursor { position: absolute; width: 64px; height: 64px; margin: -6px 0 0 -10px; filter: drop-shadow(0 8px 14px rgba(0,0,0,.3)); }
+      html[data-size="wide"] .headline { font-size: 112px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="follow-cta" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1">
+        <img class="logo" id="logo" data-var-src="logoImage" alt="" />
+        <div class="headline" id="headline"></div>
+        <div class="handle" id="handle"></div>
+        <div class="btn" id="btn"><span class="bg"></span><span class="bgDone" id="bgDone"></span><span class="ripple" id="ripple"></span>
+          <span class="lab" id="lab"></span>
+          <span class="lab done" id="labDone"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span id="labDoneText"></span></span></div>
+        <div class="foot" id="foot"></div>
+      </section>
+      <div id="cursorLayer" style="position:absolute;inset:0;pointer-events:none"><div class="cursor" id="cursorPos"><svg id="cursor" viewBox="0 0 32 32" width="64" height="64"><path d="M6 3l20 12.5-8.6 1.9 5 9.4-4.2 2.2-5-9.4L6 26z" fill="#fff" stroke="#111" stroke-width="2" stroke-linejoin="round"/></svg></div></div>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      const on = (v, f) => v === undefined || v === "" ? f : v === true || v === "true";
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const logo = document.getElementById("logo"), logoSrc = String(vars.logoImage ?? "").trim();
+      if (logoSrc && !/placeholder/.test(logoSrc)) logo.src = logoSrc; else logo.remove();
+      const set = (id, key, f) => { const el = document.getElementById(id); el.textContent = String(vars[key] ?? f).trim(); if (!el.textContent) el.remove(); return el; };
+      const headline = set("headline", "headline", "Follow for more");
+      const handle = set("handle", "handle", "@yourhandle");
+      const foot = set("foot", "footnote", "New templates every week");
+      document.getElementById("lab").textContent = String(vars.button ?? "Follow").trim() || "Follow";
+      document.getElementById("labDoneText").textContent = String(vars.buttonDone ?? "Following").trim() || "Done";
+      const btn = document.getElementById("btn"), cursorPos = document.getElementById("cursorPos");
+      const showCursor = on(vars.showCursor, true);
+      if (!showCursor) cursorPos.remove();
+      const fit = () => {
+        // The button keeps the wider of its two labels so it does not jump on the swap.
+        const lab = document.getElementById("lab"), done = document.getElementById("labDone");
+        btn.style.minWidth = "";
+        btn.style.minWidth = Math.max(lab.offsetWidth, done.scrollWidth) + 128 + "px";
+        if (headline.isConnected) { headline.style.fontSize = ""; const fs = parseFloat(getComputedStyle(headline).fontSize);
+          if (headline.scrollWidth > W * .86) headline.style.fontSize = fs * W * .86 / headline.scrollWidth + "px"; }
+        if (cursorPos.isConnected) {
+          // Offsets, not bounding boxes: they ignore the button's own entrance scale.
+          Object.assign(cursorPos.style, { left: btn.offsetLeft + btn.offsetWidth * .62 + "px", top: btn.offsetTop + btn.offsetHeight * .58 + "px" });
+        }
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+      logo.addEventListener?.("load", fit);
+
+      const total = num(vars.durationSeconds, 4, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const click = Math.min(num(vars.clickAt, 2.2, .8, 60), Math.max(.8, total - exit - .9));
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const intro = [logo, headline, handle].filter(e => e.isConnected);
+      intro.forEach((el, i) => tl.fromTo(el, { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: .65, ease: "power3.out" }, .05 + i * .12));
+      tl.fromTo(btn, { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .6, ease: "back.out(2)" }, .3 + intro.length * .12);
+      if (foot.isConnected) tl.fromTo(foot, { opacity: 0 }, { opacity: 1, duration: .5, ease: "none" }, .6 + intro.length * .12);
+      // The button press lives on the label wrapper so the entrance scale on #btn is untouched.
+      const press = p => p < .35 ? Math.sin(p / .35 * Math.PI / 2) : 1 - Math.sin((p - .35) / .65 * Math.PI / 2);
+      if (cursorPos.isConnected) {
+        tl.fromTo(cursorPos, { x: W * .34, y: H * .3, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: Math.min(1.1, click - .2), ease: "power3.inOut" }, Math.max(0, click - 1.2));
+        tl.fromTo("#cursor", { scale: 1 }, { scale: .82, duration: .3, ease: press, transformOrigin: "20% 10%" }, click - .05);
+      }
+      tl.fromTo(".btn .bg", { scale: 1 }, { scale: .92, duration: .32, ease: press }, click);
+      tl.fromTo("#ripple", { scale: 1, opacity: .8 }, { scale: 1.35, opacity: 0, duration: .7, ease: "power2.out", immediateRender: false }, click + .05);
+      tl.fromTo("#bgDone", { opacity: 0 }, { opacity: 1, duration: .25, ease: "none" }, click + .12);
+      tl.fromTo("#lab", { opacity: 1, y: 0 }, { opacity: 0, y: -24, duration: .25, ease: "power2.in" }, click + .1);
+      tl.fromTo("#labDone", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .35, ease: "back.out(2)" }, click + .22);
+      if (exit) tl.to(["#stage", "#cursorLayer"], { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["follow-cta"] = tl;
+    </script>
+  </body>
+</html>

@@ -164,6 +164,24 @@ Rules, because frames render out of order:
 - For transparent overlays, gate decoration on `var(--gridOpacity, 1)` so the exporter can
   drop it out.
 
+Patterns the motion starter pack relies on (see `templates/video/typography/` and friends):
+
+- **Fit again after fonts load.** Auto-fit measures the fallback font if it runs only once.
+  Run your fit function, then `document.fonts?.ready.then(fit)`. Keep measured layout in
+  properties no tween touches, or in CSS variables a tween scales, for example
+  `left: calc(var(--end) * var(--p))` with the timeline tweening `--p` from 0 to 1.
+- **Stepped motion is still one tween.** For "hold, then snap" sequences (a rolling word drum,
+  a blinking caret, a button press), give one tween a custom ease function that returns the
+  stepped shape, instead of several tweens on the same property.
+- **Counting numbers:** tween `innerText` and format it in `modifiers`. Modifiers run on every
+  render, including seeks, so the number always matches its frame.
+- **Measure with a class, not inline styles,** on elements the timeline also styles inline
+  (typed characters, for example). Clearing an inline style during a refit erases the
+  timeline's state.
+- **Transitions:** `durationSeconds` cannot go below 2, so keep the clip length separate from
+  the effect length (`burstSeconds`, `wipeSeconds`) and tell the user where the frame is fully
+  covered, which is where their cut goes.
+
 ---
 
 ## Checklist before you commit
