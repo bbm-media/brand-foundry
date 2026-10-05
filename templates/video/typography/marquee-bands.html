@@ -1,0 +1,128 @@
+<!doctype html>
+<!--
+  MARQUEE BANDS · video / typography
+  Two tilted ribbons of repeating text cross the frame and slide in opposite
+  directions, with a spinning badge where they meet. The streetwear-drop and
+  launch-promo look.
+  Seek-safe: each ribbon's travel is one linear x tween across the whole clip,
+  and the text repeats enough times to cover that travel at any frame.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "bandOne", "type": "string", "group": "Content", "label": "Ribbon one text", "default": "NEW TEMPLATES"}, {"id": "bandTwo", "type": "string", "group": "Content", "label": "Ribbon two text", "default": "FREE AND OPEN SOURCE"}, {"id": "badge", "type": "string", "group": "Content", "label": "Badge (blank hides)", "default": "NEW", "description": "A short word in the spinning circle where the ribbons cross."}, {"id": "separator", "type": "string", "group": "Content", "label": "Separator", "default": "✦"}, {"id": "speed", "type": "number", "group": "Motion", "label": "Speed (pixels per second)", "default": 260, "min": 0, "max": 1200, "step": 10}, {"id": "tilt", "type": "number", "group": "Motion", "label": "Tilt (degrees)", "default": 8, "min": 0, "max": 25, "step": 1}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 200, "step": 5}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Ink", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Marquee Bands {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800;900&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden; background: var(--bgColor); }
+      .band { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; overflow: hidden;
+        box-shadow: 0 18px 50px rgba(0,0,0,.18); }
+      .band.one { background: var(--accentColor); color: var(--bgColor); }
+      .band.two { background: var(--textColor); color: var(--bgColor); }
+      .track { display: flex; white-space: nowrap; font-family: var(--serif); font-weight: 800;
+        letter-spacing: -0.01em; line-height: 1; will-change: transform; }
+      .track span { padding: 0 .35em; }
+      .track .sep { color: var(--bgColor); opacity: .55; }
+      .badge { position: absolute; left: 50%; top: 50%; border-radius: 50%; background: var(--bgColor);
+        color: var(--textColor); display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 0 10px var(--accentColor), 0 24px 60px rgba(0,0,0,.25); }
+      .badge svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .badge b { font-family: var(--serif); font-weight: 800; letter-spacing: -0.02em; }
+      .ring { font-family: var(--sans); font-weight: 800; letter-spacing: .32em; fill: var(--textColor); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="marquee-bands" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0">
+        <div class="band one" id="b1"><div class="track" id="k1"></div></div>
+        <div class="band two" id="b2"><div class="track" id="k2"></div></div>
+        <div class="badge" id="badge">
+          <svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="circ" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0" /></defs>
+            <g id="ringWrap" style="transform-origin:100px 100px"><text class="ring" font-size="15"><textPath href="#circ" id="ringText"></textPath></text></g></svg>
+          <b id="badgeWord"></b>
+        </div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const speed = num(vars.speed, 260, 0, 1200), tilt = num(vars.tilt, 8, 0, 25);
+      const sep = String(vars.separator ?? "✦").trim();
+      const fontPx = (H > W ? W * .13 : H * .1) * num(vars.typeScale, 100, 40, 200) / 100;
+      const bandH = fontPx * 1.7, span = Math.hypot(W, H) + 200;
+      const travel = speed * total;
+
+      const fill = (track, phrase) => {
+        track.innerHTML = "";
+        track.style.fontSize = fontPx + "px";
+        const unit = () => { const f = document.createDocumentFragment();
+          const a = document.createElement("span"); a.textContent = phrase; f.appendChild(a);
+          if (sep) { const s = document.createElement("span"); s.className = "sep"; s.textContent = sep; f.appendChild(s); }
+          return f; };
+        track.appendChild(unit());
+        const unitW = Math.max(40, track.scrollWidth);
+        const copies = Math.ceil((span + travel) / unitW) + 2;
+        for (let i = 1; i < copies; i++) track.appendChild(unit());
+      };
+      const k1 = document.getElementById("k1"), k2 = document.getElementById("k2");
+      const p1 = String(vars.bandOne ?? "NEW TEMPLATES").trim() || "NEW TEMPLATES";
+      const p2 = String(vars.bandTwo ?? "FREE AND OPEN SOURCE").trim() || "FREE AND OPEN SOURCE";
+      const fit = () => { fill(k1, p1); fill(k2, p2); };
+      fit();
+      document.fonts?.ready.then(fit);
+      for (const [id, rot, dy] of [["b1", -tilt, -bandH * .35], ["b2", tilt, bandH * .35]]) {
+        const band = document.getElementById(id);
+        Object.assign(band.style, { width: span + "px", height: bandH + "px",
+          marginLeft: -span / 2 + "px", marginTop: -bandH / 2 + dy + "px" });
+        gsap.set(band, { rotation: rot });
+      }
+      const badge = document.getElementById("badge"), word = String(vars.badge ?? "NEW").trim();
+      if (word) {
+        const d = Math.min(W, H) * .3;
+        Object.assign(badge.style, { width: d + "px", height: d + "px", marginLeft: -d / 2 + "px", marginTop: -d / 2 + "px" });
+        const bw = document.getElementById("badgeWord");
+        bw.textContent = word; bw.style.fontSize = d * .26 / Math.max(1, word.length / 4) + "px";
+        // textLength stretches the repeats to close the circle exactly, so there is no seam.
+        const ring = document.getElementById("ringText");
+        ring.textContent = (`${word} ${sep || "•"} `).repeat(Math.max(2, Math.round(30 / (word.length + 3)))).toUpperCase();
+        ring.setAttribute("textLength", String(2 * Math.PI * 74 - 2));
+        ring.setAttribute("lengthAdjust", "spacing");
+      } else badge.remove();
+
+      root.dataset.posterTime = String(Math.min(total - exit - .05, Math.max(1.2, total * .6)));
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      // Opposite directions. Ribbon two starts shifted so its motion reads as travelling right.
+      tl.fromTo(k1, { x: 0 }, { x: -travel, duration: total, ease: "none" }, 0);
+      tl.fromTo(k2, { x: -travel }, { x: 0, duration: total, ease: "none" }, 0);
+      // Ribbons sweep in from opposite edges. GSAP owns the band transform, so the
+      // static rotation set above and this entrance compose instead of fighting.
+      tl.fromTo("#b1", { xPercent: -110 }, { xPercent: 0, duration: .7, ease: "power4.out" }, 0);
+      tl.fromTo("#b2", { xPercent: 110 }, { xPercent: 0, duration: .7, ease: "power4.out" }, .08);
+      if (badge.isConnected) {
+        tl.fromTo(badge, { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: .6, ease: "back.out(2)" }, .45);
+        tl.fromTo("#ringWrap", { rotation: 0 }, { rotation: 360 * total / 8, duration: total, ease: "none", svgOrigin: "100 100" }, 0);
+      }
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["marquee-bands"] = tl;
+    </script>
+  </body>
+</html>

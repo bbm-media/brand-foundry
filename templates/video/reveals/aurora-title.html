@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  AURORA TITLE · video / reveals
+  A dark stage lit by slow drifting glows in the brand colors, film grain on
+  top, and a title that resolves out of a soft blur. The launch-film opener.
+  The glows are large blurred circles moved by long sine tweens, pinned at both
+  ends; the grain is a static SVG turbulence. Nothing depends on wall-clock time.
+  Transparent export drops the glows and grain (gridOpacity 0) and keeps the type.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "eyebrow", "type": "string", "group": "Content", "label": "Eyebrow (blank hides)", "default": "Introducing"}, {"id": "headline", "type": "string", "group": "Content", "label": "Headline", "default": "Brand Foundry", "description": "Use a | character to break it onto two lines."}, {"id": "subline", "type": "string", "group": "Content", "label": "Subline (blank hides)", "default": "Templates your AI agents fill"}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 180, "step": 5}, {"id": "bgColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Background", "default": "#16181D", "description": "Dark backgrounds make the glow read best."}, {"id": "textColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Text", "default": "#F6F7F9"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Glow one", "default": "#2453FF"}, {"id": "secondaryColor", "type": "color", "group": "Brand", "label": "Glow two", "default": "#8B5CF6"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "gridOpacity", "type": "number", "group": "Atmosphere", "label": "Glow strength", "default": 1, "min": 0, "max": 1, "step": 0.05, "description": "Transparent exports set this to 0 so only the type is kept."}, {"id": "grain", "type": "number", "group": "Atmosphere", "label": "Film grain", "default": 0.14, "min": 0, "max": 0.5, "step": 0.01}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Aurora Title {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      .atmos { position: absolute; inset: 0; opacity: var(--gridOpacity, 1); }
+      .glow { position: absolute; border-radius: 50%; filter: blur(var(--blur)); mix-blend-mode: screen; will-change: transform; }
+      .grain { position: absolute; inset: -50%; width: 200%; height: 200%; opacity: var(--grain, .14); mix-blend-mode: overlay; }
+      .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55)); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; text-align: center; padding: 0 7%; box-sizing: border-box; }
+      .eyebrow { font-weight: 700; font-size: 30px; letter-spacing: .34em; text-transform: uppercase; opacity: .75; margin-bottom: 30px; }
+      .headline { font-family: var(--serif); font-weight: 700; line-height: 1; letter-spacing: -0.035em; }
+      .headline span { display: block; white-space: nowrap; }
+      .subline { font-weight: 600; font-size: 40px; margin-top: 34px; opacity: .72; }
+      html[data-size="wide"] .subline { font-size: 36px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="aurora-title" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <div class="atmos" id="atmos"><div class="atmos" id="atmosIn" style="opacity:1">
+        <div class="glow" id="g1"></div><div class="glow" id="g2"></div><div class="glow" id="g3"></div>
+        <svg class="grain" id="grainSvg" aria-hidden="true"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" stitchTiles="stitch" /><feColorMatrix type="saturate" values="0" /></filter><rect width="100%" height="100%" filter="url(#n)" /></svg>
+        <div class="vignette"></div>
+      </div></div>
+      <section id="stage" class="stage clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="eyebrow" id="eyebrow"></div>
+        <div class="headline" id="headline"></div>
+        <div class="subline" id="subline"></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor", "secondaryColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      root.style.setProperty("--grain", num(vars.grain, .14, 0, .5));
+      const W = {{WIDTH}}, H = {{HEIGHT}}, M = Math.max(W, H);
+      if (String(vars.bgColor ?? "").trim() === "transparent" || Number(vars.gridOpacity) === 0) document.getElementById("atmos").remove();
+
+      const eyebrow = document.getElementById("eyebrow"), headline = document.getElementById("headline"), subline = document.getElementById("subline");
+      eyebrow.textContent = String(vars.eyebrow ?? "Introducing").trim();
+      subline.textContent = String(vars.subline ?? "Templates your AI agents fill").trim();
+      if (!eyebrow.textContent) eyebrow.remove();
+      if (!subline.textContent) subline.remove();
+      const lines = String(vars.headline ?? "Brand Foundry").split("|").map(s => s.trim()).filter(Boolean);
+      (lines.length ? lines : ["Your title"]).slice(0, 3).forEach(t => { const s = document.createElement("span"); s.textContent = t; headline.appendChild(s); });
+      const base = Math.min(W * .14, H * .17) * num(vars.typeScale, 100, 40, 180) / 100;
+      const fit = () => {
+        headline.style.fontSize = base + "px";
+        const widest = Math.max(...[...headline.children].map(s => s.scrollWidth));
+        if (widest > W * .86) headline.style.fontSize = base * W * .86 / widest + "px";
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      // Three glows: two brand colors and a blend of both, each on its own slow orbit.
+      const glows = [
+        { id: "g1", color: "var(--accentColor)", d: M * .52, x: .2, y: .28, dx: .12, dy: .08 },
+        { id: "g2", color: "var(--secondaryColor)", d: M * .48, x: .8, y: .72, dx: -.12, dy: -.08 },
+        { id: "g3", color: "color-mix(in srgb, var(--accentColor) 50%, var(--secondaryColor))", d: M * .34, x: .5, y: 1, dx: .08, dy: -.1 },
+      ];
+      glows.forEach(g => { const el = document.getElementById(g.id); if (!el) return;
+        Object.assign(el.style, { width: g.d + "px", height: g.d + "px", left: W * g.x - g.d / 2 + "px", top: H * g.y - g.d / 2 + "px",
+          background: g.color, opacity: .7 }); el.style.setProperty("--blur", M * .09 + "px"); });
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      if (document.getElementById("atmos")) {
+        tl.fromTo("#atmosIn", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
+        glows.forEach((g, i) => tl.fromTo("#" + g.id, { x: 0, y: 0, scale: .85 },
+          { x: W * g.dx, y: H * g.dy, scale: 1.05, duration: total, ease: "sine.inOut" }, 0));
+        // The grain shifts on whole-frame steps, which reads as film rather than a sliding texture.
+        tl.fromTo("#grainSvg", { x: 0, y: 0 }, { x: 37, y: -23, duration: total, ease: `steps(${Math.round(total * 12)})` }, 0);
+      }
+      if (eyebrow.isConnected) tl.fromTo(eyebrow, { opacity: 0, letterSpacing: ".8em" }, { opacity: .75, letterSpacing: ".34em", duration: 1.2, ease: "power3.out" }, .35);
+      tl.fromTo(headline, { opacity: 0, scale: 1.08, filter: "blur(28px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 1.4, ease: "power3.out" }, .55);
+      if (subline.isConnected) tl.fromTo(subline, { opacity: 0, y: 20 }, { opacity: .72, y: 0, duration: .8, ease: "power3.out" }, 1.35);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["aurora-title"] = tl;
+    </script>
+  </body>
+</html>

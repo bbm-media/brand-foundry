@@ -11,6 +11,13 @@ First public release.
 
 ### Added
 
+- **Motion starter pack, 15 templates:** Kinetic Slam, Mask Reveal, Slot Roll,
+  Line Draw, Marquee Bands and Word Drum (typography); Aurora Title (reveals);
+  Shape Burst and Tile Wipe (transitions); Product Showcase, Screen Zoom and
+  Prompt Box (product); Bar Race (data); Quote Card (social); Follow CTA
+  (endcards). Every one inherits the studio brand and renders to MP4 and
+  transparent MOV.
+
 - **Library and editor** with Brand Settings: colors, heading and body fonts and
   handle, set once and applied to every template.
 - **Editor controls:** compact panels, image collection fields with thumbnails,

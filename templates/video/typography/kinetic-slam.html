@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  KINETIC SLAM · video / typography
+  One word per beat, full frame, cut hard on the beat. The showreel opener:
+  each word punches in from oversize and the background flashes through the
+  brand colors. Set the tempo to your track and the cuts land on the music.
+  Seek-safe: visibility changes are tl.set() steps, the punch is a fromTo on an
+  inner element, so no two tweens touch the same property.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "words", "type": "string", "group": "Content", "label": "Words", "default": "STOP|SCROLLING.|THIS|IS|YOUR|BRAND|IN MOTION.", "description": "One word or short phrase per beat. Separate them with a | character."}, {"id": "letterCase", "type": "enum", "group": "Content", "label": "Letter case", "default": "upper", "options": [{"value": "upper", "label": "UPPERCASE"}, {"value": "asis", "label": "As typed"}]}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 160, "step": 5, "description": "Long words still shrink to fit the frame."}, {"id": "bpm", "type": "number", "group": "Rhythm", "label": "Tempo (BPM)", "default": 120, "min": 40, "max": 220, "step": 1, "description": "Match your music. One word lands per beat. If the words do not fit in the total length, the beat speeds up to fit."}, {"id": "beatsPerWord", "type": "number", "group": "Rhythm", "label": "Beats per word", "default": 1, "min": 0.5, "max": 4, "step": 0.5}, {"id": "flashPanels", "type": "boolean", "group": "Rhythm", "label": "Flash the background", "default": true, "description": "Cycles the background through your brand colors on every beat. Turned off automatically for transparent exports."}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Ink", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": "", "description": "Inherit brand, or choose an installed system font. Heavy faces hit hardest."}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Kinetic Slam {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800;900&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); font-family: var(--serif); }
+      .panel { position: absolute; inset: 0; visibility: hidden; opacity: 0; }
+      .word { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        visibility: hidden; opacity: 0; }
+      .word.first { visibility: visible; opacity: 1; }
+      .inner { display: block; font-weight: 800; line-height: .9; letter-spacing: -0.035em;
+        white-space: nowrap; text-align: center; will-change: transform; }
+      .bar { position: absolute; left: 50%; height: 0; transform-origin: 0 50%; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="kinetic-slam" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0"></section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root"), stage = document.getElementById("stage");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      const on = (v, f) => v === undefined || v === "" ? f : v === true || v === "true";
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+      let words = String(vars.words ?? "STOP|SCROLLING.|THIS|IS|YOUR|BRAND|IN MOTION.").split("|").map(s => s.trim()).filter(Boolean);
+      if (!words.length) words = ["YOUR", "WORDS"];
+      if (vars.letterCase !== "asis") words = words.map(w => w.toUpperCase());
+      const transparent = String(vars.bgColor ?? "").trim() === "transparent";
+      const flash = on(vars.flashPanels, true) && !transparent;
+
+      // Panel and word colors cycle together so every word keeps its contrast.
+      const cycle = flash
+        ? [["var(--bgColor)", "var(--textColor)"], ["var(--accentColor)", "var(--bgColor)"], ["var(--textColor)", "var(--bgColor)"]]
+        : [[null, "var(--textColor)"], [null, "var(--accentColor)"]];
+      const baseSize = Math.min(W * 0.2, H * 0.3) * num(vars.typeScale, 100, 40, 160) / 100;
+      const maxW = W * 0.86;
+      const items = words.map((text, i) => {
+        const [panelColor, ink] = cycle[i % cycle.length];
+        let panel = null;
+        if (panelColor) {
+          panel = document.createElement("div");
+          panel.className = "panel"; panel.style.background = panelColor;
+          if (i === 0) { panel.style.visibility = "visible"; panel.style.opacity = 1; }
+          stage.appendChild(panel);
+        }
+        const word = document.createElement("div");
+        word.className = "word" + (i === 0 ? " first" : "");
+        const inner = document.createElement("span");
+        inner.className = "inner"; inner.textContent = text; inner.style.color = ink;
+        word.appendChild(inner); stage.appendChild(word);
+        return { panel, word, inner, ink };
+      });
+      // Underline that sweeps under the last word once it lands.
+      const last = items[items.length - 1];
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.background = flash && (items.length - 1) % 3 !== 1 ? "var(--accentColor)" : last.ink;
+      last.word.appendChild(bar);
+      // Sizes depend on the real font, so fit again once web fonts arrive.
+      const fit = () => {
+        for (const it of items) {
+          it.inner.style.fontSize = baseSize + "px";
+          if (it.inner.scrollWidth > maxW) it.inner.style.fontSize = baseSize * maxW / it.inner.scrollWidth + "px";
+        }
+        const lastSize = parseFloat(last.inner.style.fontSize), barW = last.inner.scrollWidth;
+        Object.assign(bar.style, { width: barW + "px", height: Math.max(8, lastSize * .07) + "px",
+          marginLeft: -barW / 2 + "px", top: H / 2 + lastSize * .5 + "px" });
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const avail = Math.max(.5, total - exit - .6);
+      let beat = 60 / num(vars.bpm, 120, 40, 220) * num(vars.beatsPerWord, 1, .5, 4);
+      if (beat * items.length > avail) beat = avail / items.length;
+      const punch = Math.min(.3, beat * .7);
+      const lastAt = beat * (items.length - 1);
+      root.dataset.posterTime = String(total - exit - .05);
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      items.forEach((it, i) => {
+        const t = i * beat;
+        if (i > 0) {
+          tl.set(it.word, { autoAlpha: 1 }, t);
+          if (it.panel) tl.set(it.panel, { autoAlpha: 1 }, t);
+        }
+        if (i < items.length - 1) {
+          tl.set(it.word, { autoAlpha: 0 }, t + beat);
+          if (it.panel) tl.set(it.panel, { autoAlpha: 0 }, t + beat);
+        }
+        // Slow push while the word holds keeps the frame alive between hits.
+        tl.fromTo(it.word, { scale: 1 }, { scale: i === items.length - 1 ? 1.04 : 1.08,
+          duration: i === items.length - 1 ? Math.max(.5, total - exit - t) : beat, ease: "none" }, t);
+        tl.fromTo(it.inner, { scale: 1.45, rotation: i % 2 ? 3 : -3 },
+          { scale: 1, rotation: 0, duration: punch, ease: "expo.out" }, t);
+      });
+      tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: .45, ease: "power4.out" }, lastAt + punch * .6);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["kinetic-slam"] = tl;
+    </script>
+  </body>
+</html>

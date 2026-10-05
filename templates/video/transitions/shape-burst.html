@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+  SHAPE BURST · video / transitions
+  A transition to drop between two clips. Rings of brand color burst out of a
+  point and cover the frame, an optional word punches in at the peak, then the
+  rings collapse away and leave the frame clear again.
+  Export it as a transparent MOV and lay it over the cut: the frame is fully
+  covered halfway through the transition, so put your splice there.
+  Each ring has two nested elements: the outer one grows in, the inner one
+  shrinks out, so no property is tweened twice.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "word", "type": "string", "group": "Content", "label": "Word at the peak (blank hides)", "default": "NEXT"}, {"id": "shape", "type": "enum", "group": "Shape", "label": "Shape", "default": "circle", "options": [{"value": "circle", "label": "Circle"}, {"value": "square", "label": "Square"}, {"value": "diamond", "label": "Diamond"}]}, {"id": "origin", "type": "enum", "group": "Shape", "label": "Burst from", "default": "center", "options": [{"value": "center", "label": "Center"}, {"value": "bottomLeft", "label": "Bottom left"}, {"value": "topRight", "label": "Top right"}, {"value": "bottom", "label": "Bottom"}]}, {"id": "rings", "type": "number", "group": "Shape", "label": "Rings", "default": 3, "min": 1, "max": 5, "step": 1}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Ring one", "default": "#2453FF"}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Ring two", "default": "#16181D"}, {"id": "paperColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Ring three and word", "default": "#F6F7F9"}, {"id": "bgColor", "type": "color", "group": "Brand", "label": "Background (MP4 only)", "default": "#0D0E11", "description": "Only shows in MP4 exports. The transparent MOV keeps the frame clear so your footage shows through."}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "burstSeconds", "type": "number", "group": "Timing", "label": "Transition seconds", "default": 1.4, "min": 0.4, "max": 10, "step": 0.1, "description": "The frame is fully covered at the halfway point of the transition. Put your cut there."}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Clip seconds", "default": 2, "min": 2, "max": 120, "step": 0.5, "description": "Total render length. The transition plays from the start and the rest stays clear, so you can trim it."}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Shape Burst {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden; background: var(--bgColor); }
+      .ring, .ring i { position: absolute; display: block; }
+      .ring i { inset: 0; border-radius: inherit; }
+      .word span { display: inline-block; }
+      .word { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        font-family: var(--serif); font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; line-height: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="shape-burst" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="2" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="2" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0"></section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root"), stage = document.getElementById("stage");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor", "paperColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const origins = { center: [.5, .5], bottomLeft: [0, 1], topRight: [1, 0], bottom: [.5, 1] };
+      const [ox, oy] = (origins[vars.origin] || origins.center).map((v, i) => v * (i ? H : W));
+      // Size that covers the frame from this origin, with room for a rotated square.
+      const reach = 2 * Math.max(Math.hypot(ox, oy), Math.hypot(W - ox, oy), Math.hypot(ox, H - oy), Math.hypot(W - ox, H - oy)) * 1.05;
+      const shape = ["square", "diamond"].includes(vars.shape) ? vars.shape : "circle";
+      const n = Math.round(num(vars.rings, 3, 1, 5));
+      const colors = ["var(--accentColor)", "var(--textColor)", "var(--paperColor)"];
+      const rings = Array.from({ length: n }, (_, i) => {
+        const outer = document.createElement("div"); outer.className = "ring";
+        const inner = document.createElement("i"); inner.style.background = colors[i % 3];
+        Object.assign(outer.style, { width: reach + "px", height: reach + "px", left: ox - reach / 2 + "px", top: oy - reach / 2 + "px",
+          borderRadius: shape === "circle" ? "50%" : "0" });
+        if (shape === "diamond") gsap.set(outer, { rotation: 45 });
+        outer.appendChild(inner); stage.appendChild(outer);
+        return { outer, inner };
+      });
+      const wordText = String(vars.word ?? "NEXT").trim();
+      let word = null;
+      if (wordText) {
+        // Outer element carries the exit, inner span the entrance: one owner per property.
+        word = document.createElement("div"); word.className = "word";
+        const wi = document.createElement("span"); wi.id = "wordIn"; wi.textContent = wordText; word.appendChild(wi);
+        // The word sits on the last ring's color, so pick the contrasting one.
+        word.style.color = (n - 1) % 3 === 2 ? "var(--textColor)" : "var(--paperColor)";
+        stage.appendChild(word);
+        const fit = () => { word.style.fontSize = Math.min(W, H) * .22 + "px";
+          const w = wi.offsetWidth; if (w > W * .8) word.style.fontSize = Math.min(W, H) * .22 * W * .8 / w + "px"; };
+        fit(); document.fonts?.ready.then(fit);
+      }
+
+      const total = num(vars.durationSeconds, 2, 2, 120);
+      const burst = Math.min(total, num(vars.burstSeconds, 1.4, .4, 10));
+      const half = burst / 2, grow = half * .9, gap = Math.min(.08, grow / (n * 2));
+      root.dataset.posterTime = String(half);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      rings.forEach((r, i) => {
+        tl.fromTo(r.outer, { scale: 0 }, { scale: 1, duration: grow - i * gap, ease: "power3.in" }, i * gap);
+        // Out: the top ring leaves first, revealing the ones beneath, then the frame.
+        tl.fromTo(r.inner, { scale: 1 }, { scale: 0, duration: grow - (n - 1 - i) * gap, ease: "power3.out" }, half + (n - 1 - i) * gap);
+      });
+      if (word) {
+        tl.fromTo("#wordIn", { scale: .6, opacity: 0 }, { scale: 1, opacity: 1, duration: half * .45, ease: "back.out(2)" }, half * .62);
+        tl.fromTo(word, { yPercent: 0, opacity: 1 }, { yPercent: -30, opacity: 0, duration: half * .4, ease: "power2.in" }, half + half * .05);
+      }
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["shape-burst"] = tl;
+    </script>
+  </body>
+</html>

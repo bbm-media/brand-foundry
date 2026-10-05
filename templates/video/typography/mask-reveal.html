@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  MASK REVEAL · video / typography
+  The editorial title move. Each line rises out of its own mask, or a color
+  block wipes across the line and leaves the words behind it. An eyebrow label
+  tracks in above and a rule draws underneath.
+  Seek-safe: every tween is a fromTo on a transform or opacity, one element per
+  property. Layout is re-fitted after web fonts load.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "eyebrow", "type": "string", "group": "Content", "label": "Eyebrow (blank hides)", "default": "Chapter one"}, {"id": "lines", "type": "string", "group": "Content", "label": "Title lines", "default": "Design once.|Fill it forever.", "description": "Up to four lines. Separate them with a | character."}, {"id": "caption", "type": "string", "group": "Content", "label": "Caption (blank hides)", "default": "Templates your agents can fill"}, {"id": "revealStyle", "type": "enum", "group": "Content", "label": "Reveal", "default": "block", "options": [{"value": "block", "label": "Color block wipe"}, {"value": "rise", "label": "Rise from mask"}]}, {"id": "align", "type": "enum", "group": "Content", "label": "Alignment", "default": "left", "options": [{"value": "left", "label": "Left"}, {"value": "center", "label": "Center"}]}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 180, "step": 5}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Accent", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": ""}, {"id": "lineStagger", "type": "number", "group": "Timing", "label": "Line delay (seconds)", "default": 0.18, "min": 0, "max": 1.5, "step": 0.02}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Mask Reveal {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans); }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+        align-items: flex-start; padding: 0 9%; box-sizing: border-box; }
+      #root.center .stage { align-items: center; text-align: center; }
+      .eyebrow { font-weight: 800; font-size: 30px; letter-spacing: .26em; text-transform: uppercase;
+        color: var(--accentColor); margin-bottom: 34px; white-space: nowrap; }
+      .mask { position: relative; overflow: hidden; padding: .04em .02em .1em; margin: -.04em 0 -.1em; }
+      .line { display: block; font-family: var(--serif); font-weight: 700; line-height: 1.04;
+        letter-spacing: -0.03em; white-space: nowrap; }
+      .blockwrap { position: absolute; inset: 6% 0 8% 0; transform-origin: 100% 50%; }
+      .block { position: absolute; inset: 0; background: var(--accentColor); transform-origin: 0 50%; }
+      .rule { width: 140px; height: 10px; background: var(--accentColor); margin-top: 40px; transform-origin: 0 50%; }
+      #root.center .rule { transform-origin: 50% 50%; }
+      .caption { font-weight: 600; font-size: 38px; margin-top: 28px;
+        color: color-mix(in srgb, var(--textColor) 68%, transparent); }
+      html[data-size="wide"] .eyebrow { font-size: 30px; }
+      html[data-size="wide"] .caption { font-size: 34px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="mask-reveal" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
+      <section id="stage" class="stage clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="eyebrow" id="eyebrow"></div>
+        <div id="lines"></div>
+        <div class="rule" id="rule"></div>
+        <div class="caption" id="caption"></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root"), stage = document.getElementById("stage");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      const text = (k, f) => String(vars[k] ?? f).trim();
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      if (vars.align === "center") root.classList.add("center");
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const eyebrow = document.getElementById("eyebrow"), caption = document.getElementById("caption");
+      eyebrow.textContent = text("eyebrow", "Chapter one");
+      caption.textContent = text("caption", "Templates your agents can fill");
+      if (!eyebrow.textContent) eyebrow.remove();
+      if (!caption.textContent) caption.remove();
+      const lines = text("lines", "Design once.|Fill it forever.").split("|").map(s => s.trim()).filter(Boolean).slice(0, 4);
+      if (!lines.length) lines.push("Your title");
+      const block = vars.revealStyle !== "rise";
+      const wrap = document.getElementById("lines");
+      const rows = lines.map(t => {
+        const mask = document.createElement("div"); mask.className = "mask";
+        const line = document.createElement("span"); line.className = "line"; line.textContent = t;
+        mask.appendChild(line);
+        let bar = null;
+        let out = null;
+        if (block) {
+          // Two elements so the grow and the exit never tween the same property.
+          out = document.createElement("div"); out.className = "blockwrap";
+          bar = document.createElement("div"); bar.className = "block";
+          out.appendChild(bar); mask.appendChild(out);
+        }
+        wrap.appendChild(mask);
+        return { mask, line, bar, out };
+      });
+      const base = Math.min(W * .13, H * .135) * num(vars.typeScale, 100, 40, 180) / 100;
+      const fit = () => {
+        const avail = W * .82;
+        rows.forEach(r => { r.line.style.fontSize = base + "px"; });
+        const widest = Math.max(...rows.map(r => r.line.scrollWidth));
+        if (widest > avail) rows.forEach(r => { r.line.style.fontSize = base * avail / widest + "px"; });
+        // Keep the block snug to each line's own width.
+        rows.forEach(r => { r.mask.style.width = r.line.scrollWidth + "px"; });
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+
+      const total = num(vars.durationSeconds, 4, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const stagger = num(vars.lineStagger, .18, 0, 1.5);
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      let t = .1;
+      if (eyebrow.isConnected) {
+        tl.fromTo(eyebrow, { opacity: 0, letterSpacing: ".6em" }, { opacity: 1, letterSpacing: ".26em", duration: .8, ease: "power3.out" }, 0);
+        t = .3;
+      }
+      rows.forEach((r, i) => {
+        const at = t + i * stagger;
+        if (block) {
+          // Block grows from the left, the words appear under it, then it exits right.
+          tl.fromTo(r.bar, { scaleX: 0 }, { scaleX: 1, duration: .38, ease: "power4.inOut" }, at);
+          tl.fromTo(r.line, { opacity: 0 }, { opacity: 1, duration: .01 }, at + .38);
+          tl.fromTo(r.out, { scaleX: 1 }, { scaleX: 0, duration: .42, ease: "power4.inOut" }, at + .4);
+        } else {
+          tl.fromTo(r.line, { yPercent: 110, rotation: 3 }, { yPercent: 0, rotation: 0, duration: .8, ease: "power4.out" }, at);
+        }
+      });
+      const after = t + (rows.length - 1) * stagger + (block ? .75 : .5);
+      tl.fromTo("#rule", { scaleX: 0 }, { scaleX: 1, duration: .55, ease: "power3.out" }, after);
+      if (caption.isConnected) tl.fromTo(caption, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .55, ease: "power3.out" }, after + .12);
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["mask-reveal"] = tl;
+    </script>
+  </body>
+</html>

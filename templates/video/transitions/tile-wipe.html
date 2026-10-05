@@ -1,0 +1,77 @@
+<!doctype html>
+<!--
+  TILE WIPE · video / transitions
+  A grid of tiles flips in across the frame, holds for a beat fully covered,
+  then flips away in the same direction. Lay the transparent MOV over a cut
+  and put the splice at the covered point.
+  GSAP's grid stagger is deterministic. Each tile is two nested elements: the
+  outer one flips in, the inner one flips out, so no property is tweened twice.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "columns", "type": "number", "group": "Grid", "label": "Columns", "default": 8, "min": 2, "max": 20, "step": 1, "description": "Rows follow from the frame shape so the tiles stay square."}, {"id": "direction", "type": "enum", "group": "Grid", "label": "Sweep from", "default": "start", "options": [{"value": "start", "label": "Top left"}, {"value": "center", "label": "Center out"}, {"value": "end", "label": "Bottom right"}, {"value": "edges", "label": "Edges in"}]}, {"id": "pattern", "type": "enum", "group": "Grid", "label": "Colors", "default": "checker", "options": [{"value": "checker", "label": "Checkerboard"}, {"value": "solid", "label": "Solid accent"}, {"value": "stripes", "label": "Stripes"}]}, {"id": "motion", "type": "enum", "group": "Grid", "label": "Tile motion", "default": "flip", "options": [{"value": "flip", "label": "3D flip"}, {"value": "scale", "label": "Pop"}, {"value": "spin", "label": "Spin"}]}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Tile one", "default": "#2453FF"}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Tile two", "default": "#16181D"}, {"id": "bgColor", "type": "color", "group": "Brand", "label": "Background (MP4 only)", "default": "#F6F7F9", "description": "Only shows in MP4 exports. The transparent MOV keeps the frame clear."}, {"id": "wipeSeconds", "type": "number", "group": "Timing", "label": "Transition seconds", "default": 1.4, "min": 0.4, "max": 10, "step": 0.1, "description": "The frame is fully covered at the halfway point of the transition."}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Clip seconds", "default": 2, "min": 2, "max": 120, "step": 0.5, "description": "Total render length. The transition plays from the start and the rest stays clear."}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Tile Wipe {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      body { margin: 0; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden; background: var(--bgColor); }
+      .grid { position: absolute; inset: 0; display: grid; }
+      .tile { position: relative; }
+      /* Slight overlap hides hairline seams between tiles while they are flat. */
+      .tile i { position: absolute; inset: -1px; display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="tile-wipe" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="2" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="2" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0"><div class="grid" id="grid"></div></section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root"), grid = document.getElementById("grid");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+
+      const cols = Math.round(num(vars.columns, 8, 2, 20));
+      // Whole-pixel square tiles keep the edges crisp, so no seams show while covered.
+      const size = Math.ceil(W / cols), rows = Math.ceil(H / size);
+      Object.assign(grid.style, { gridTemplateColumns: `repeat(${cols}, ${size}px)`, gridTemplateRows: `repeat(${rows}, ${size}px)`,
+        inset: "auto", left: Math.floor((W - cols * size) / 2) + "px", top: Math.floor((H - rows * size) / 2) + "px" });
+      const pattern = ["solid", "stripes"].includes(vars.pattern) ? vars.pattern : "checker";
+      const outers = [], inners = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const tile = document.createElement("div"); tile.className = "tile";
+        const face = document.createElement("i");
+        const second = pattern === "checker" ? (r + c) % 2 : pattern === "stripes" ? c % 2 : 0;
+        face.style.background = second ? "var(--textColor)" : "var(--accentColor)";
+        tile.appendChild(face); grid.appendChild(tile);
+        outers.push(tile); inners.push(face);
+      }
+
+      const total = num(vars.durationSeconds, 2, 2, 120);
+      const wipe = Math.min(total, num(vars.wipeSeconds, 1.4, .4, 10));
+      const half = wipe / 2, each = half * .45, spread = half * .5;
+      const from = ["center", "end", "edges"].includes(vars.direction) ? vars.direction : "start";
+      const stagger = { grid: [rows, cols], from, amount: spread };
+      const motion = ["scale", "spin"].includes(vars.motion) ? vars.motion : "flip";
+      // Each tile gets its own perspective, so at 90 degrees it is exactly edge-on and invisible.
+      gsap.set([...outers, ...inners], { transformPerspective: size * 6 });
+      const hidden = motion === "flip" ? { rotationY: -90 } : motion === "spin" ? { scale: 0, rotation: -120 } : { scale: 0 };
+      const shown = motion === "flip" ? { rotationY: 0 } : motion === "spin" ? { scale: 1, rotation: 0 } : { scale: 1 };
+      const away = motion === "flip" ? { rotationY: 90 } : motion === "spin" ? { scale: 0, rotation: 120 } : { scale: 0 };
+      root.dataset.posterTime = String(half);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(outers, hidden, { ...shown, duration: each, ease: "power2.out", stagger }, 0);
+      tl.fromTo(inners, shown, { ...away, duration: each, ease: "power2.in", stagger }, half);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["tile-wipe"] = tl;
+    </script>
+  </body>
+</html>

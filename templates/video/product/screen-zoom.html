@@ -1,0 +1,117 @@
+<!doctype html>
+<!--
+  SCREEN ZOOM · video / product
+  The tutorial move: show the whole screen, then push the camera into one
+  part of it. Everything else dims, a ring pulses around the spot, and a label
+  says what to look at. Set the focus with percentages of the screenshot.
+  The camera is one element (scale + x + y in a single tween). The dim, ring and
+  label are separate elements, so every property has one owner.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "screenshotImage", "type": "string", "group": "Content", "label": "Screenshot", "default": "assets/sample-app.svg"}, {"id": "label", "type": "string", "group": "Content", "label": "Label (blank hides)", "default": "Revenue is up 38%"}, {"id": "focusX", "type": "number", "group": "Focus", "label": "Focus center, across (%)", "default": 61, "min": 0, "max": 100, "step": 1, "description": "0 is the left edge of the screenshot, 100 the right."}, {"id": "focusY", "type": "number", "group": "Focus", "label": "Focus center, down (%)", "default": 61, "min": 0, "max": 100, "step": 1, "description": "0 is the top edge of the screenshot, 100 the bottom."}, {"id": "focusW", "type": "number", "group": "Focus", "label": "Focus width (%)", "default": 30, "min": 5, "max": 100, "step": 1}, {"id": "focusH", "type": "number", "group": "Focus", "label": "Focus height (%)", "default": 30, "min": 5, "max": 100, "step": 1}, {"id": "zoom", "type": "number", "group": "Focus", "label": "Zoom", "default": 2.2, "min": 1, "max": 5, "step": 0.1, "description": "How far the camera pushes in. It is capped so the focus area still fits the frame."}, {"id": "dim", "type": "number", "group": "Focus", "label": "Dim the rest", "default": 0.55, "min": 0, "max": 0.9, "step": 0.05}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Label text", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Ring and label", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "zoomAt", "type": "number", "group": "Timing", "label": "Zoom starts at (seconds)", "default": 0.9, "min": 0, "max": 60, "step": 0.1}, {"id": "zoomSeconds", "type": "number", "group": "Timing", "label": "Zoom seconds", "default": 1.2, "min": 0.2, "max": 6, "step": 0.1}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 5, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Screen Zoom {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root { position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor); font-family: var(--sans); }
+      .cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+      .frame { position: absolute; border-radius: 18px; overflow: hidden; background: #fff;
+        box-shadow: 0 40px 100px -30px rgba(10,12,20,.4), 0 0 0 1px rgba(10,12,20,.08); }
+      .frame img { display: block; width: 100%; height: 100%; object-fit: fill; }
+      /* The hole: a box whose enormous shadow is the dim layer around it. */
+      .hole { position: absolute; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(8,10,16,var(--dim,.55)); }
+      .ring { position: absolute; border-radius: 16px; border: 6px solid var(--accentColor); box-sizing: border-box; }
+      .label { position: absolute; left: 50%; display: flex; align-items: center; gap: 14px; white-space: nowrap;
+        padding: 20px 30px; border-radius: 16px; background: var(--accentColor); color: #fff;
+        font-weight: 800; font-size: 38px; letter-spacing: -0.01em; box-shadow: 0 24px 50px -16px rgba(10,12,20,.5); }
+      .label::before { content: ""; position: absolute; left: 50%; top: -12px; margin-left: -12px;
+        border: 12px solid transparent; border-top: 0; border-bottom-color: var(--accentColor); }
+      .label.above::before { top: auto; bottom: -12px; border-bottom: 0; border-top: 12px solid var(--accentColor); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="screen-zoom" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="5" data-duration-var="durationSeconds">
+      <section id="stage" class="clip" data-start="0" data-duration="5" data-duration-var="durationSeconds" data-track-index="1"
+        style="position:absolute;inset:0">
+        <div id="camIn" style="position:absolute;inset:0"><div class="cam" id="cam">
+          <div class="frame" id="frame"><img id="shot" data-var-src="screenshotImage" src="assets/sample-app.svg" alt="" /></div>
+          <div id="holeWrap" style="position:absolute;inset:0;opacity:0"><div class="hole" id="hole"></div></div>
+          <div class="ring" id="ring"></div>
+        </div></div>
+        <div class="label" id="label"><span id="labelText"></span></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const num = (v, f, lo, hi) => { const n = Number(v); return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : f)); };
+      for (const k of ["bgColor", "textColor", "accentColor"]) if (vars[k]) root.style.setProperty("--" + k, vars[k]);
+      root.style.setProperty("--dim", num(vars.dim, .55, 0, .9));
+      const W = {{WIDTH}}, H = {{HEIGHT}};
+      const img = document.getElementById("shot"), frame = document.getElementById("frame");
+      const shot = String(vars.screenshotImage ?? "").trim();
+      if (shot) img.src = shot;
+      const labelEl = document.getElementById("label");
+      document.getElementById("labelText").textContent = String(vars.label ?? "Revenue is up 38%").trim();
+      if (!document.getElementById("labelText").textContent) labelEl.remove();
+
+      const total = num(vars.durationSeconds, 5, 2, 120);
+      const exit = Math.min(total * .45, num(vars.exitSeconds, 0, 0, 10));
+      const zoomAt = Math.min(num(vars.zoomAt, .9, 0, 60), Math.max(0, total - exit - .6));
+      const zoomDur = Math.min(num(vars.zoomSeconds, 1.2, .2, 6), Math.max(.2, total - exit - zoomAt - .2));
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["screen-zoom"] = tl;
+
+      // Layout needs the image's real shape, so the camera tween is added once it has loaded.
+      // The timeline is registered right away; the tweens are fromTo, so seeks before or after
+      // they are added still render correctly.
+      const build = () => {
+        const ar = (img.naturalWidth && img.naturalHeight) ? img.naturalWidth / img.naturalHeight : 1.6;
+        let fw = W * .86, fh = fw / ar;
+        if (fh > H * .78) { fh = H * .78; fw = fh * ar; }
+        const fx = (W - fw) / 2, fy = (H - fh) / 2;
+        Object.assign(frame.style, { left: fx + "px", top: fy + "px", width: fw + "px", height: fh + "px" });
+        const cx = fx + fw * num(vars.focusX, 61, 0, 100) / 100, cy = fy + fh * num(vars.focusY, 61, 0, 100) / 100;
+        const bw = fw * num(vars.focusW, 30, 5, 100) / 100, bh = fh * num(vars.focusH, 30, 5, 100) / 100;
+        for (const el of [document.getElementById("hole"), document.getElementById("ring")])
+          Object.assign(el.style, { left: cx - bw / 2 + "px", top: cy - bh / 2 + "px", width: bw + "px", height: bh + "px" });
+        // Cap the zoom so the focus box (plus room for the label) still fits.
+        const z = Math.min(num(vars.zoom, 2.2, 1, 5), W * .9 / bw, H * .62 / bh);
+        // Camera: scale about the top-left, then move so the focus center lands mid-frame.
+        const tx = W / 2 - cx * z, ty = H / 2 - cy * z;
+        tl.clear();
+        // Entrance on the wrapper, zoom on the camera: one owner per transform.
+        tl.fromTo("#camIn", { scale: .96, y: 30, opacity: 0 }, { scale: 1, y: 0, opacity: 1, duration: .6, ease: "power3.out" }, 0);
+        tl.fromTo("#cam", { scale: 1, x: 0, y: 0 }, { scale: z, x: tx, y: ty, duration: zoomDur, ease: "expo.inOut" }, zoomAt);
+        tl.fromTo("#holeWrap", { opacity: 0 }, { opacity: 1, duration: zoomDur * .6, ease: "power2.out" }, zoomAt + zoomDur * .4);
+        tl.fromTo("#ring", { scale: 1.25, opacity: 0 }, { scale: 1, opacity: 1, duration: .45, ease: "back.out(2)" }, zoomAt + zoomDur * .85);
+        if (labelEl.isConnected) {
+          // Label sits under the zoomed box, or above it when that is closer to the bottom edge.
+          const below = H / 2 + bh * z / 2 + 34, above = H / 2 - bh * z / 2 - 34;
+          const useAbove = below + 110 > H;
+          labelEl.classList.toggle("above", useAbove);
+          Object.assign(labelEl.style, { top: (useAbove ? above : below) + "px", transform: `translate(-50%, ${useAbove ? "-100%" : "0"})` });
+          tl.fromTo("#labelText", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .4, ease: "power3.out" }, zoomAt + zoomDur + .1);
+          tl.fromTo(labelEl, { opacity: 0 }, { opacity: 1, duration: .3, ease: "none" }, zoomAt + zoomDur);
+        }
+        if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+        tl.to({}, { duration: .001 }, total - .001);
+      };
+      build();
+      if (!img.complete) img.addEventListener("load", build, { once: true });
+    </script>
+  </body>
+</html>

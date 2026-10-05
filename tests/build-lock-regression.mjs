@@ -18,7 +18,8 @@ const build = () => spawnSync(process.execPath, ['generate.mjs'], { cwd: fixture
 const holders = [];
 const holdBuildDir = (ms) => holders[holders.length] = spawn(process.execPath, ['-e', `setTimeout(() => {}, ${ms})`], { cwd: path.join(fixture, 'build') });
 const leftovers = () => readdirSync(fixture).filter(f => f.startsWith('.build-'));
-const exited = (child) => new Promise(resolve => child.exitCode !== null ? resolve() : child.once('exit', resolve));
+// A killed child reports signalCode, not exitCode, so check both or a second wait never resolves.
+const exited = (child) => new Promise(resolve => child.exitCode !== null || child.signalCode !== null ? resolve() : child.once('exit', resolve));
 
 try {
   assert.equal(build().status, 0, 'initial build');

@@ -121,9 +121,14 @@ Building this blew my mind. I hope it does the same for you.
 | Carousels | Case Study · Starter Slide | PNG |
 | Statics | Case Study · Starter Poster | PNG |
 | Video · Overlays | Speaker Nameplate · Starter Headline | PNG, MP4, transparent MOV |
-| Video · Data | Stat Spotlight | PNG, MP4, transparent MOV |
+| Video · Data | Stat Spotlight · Bar Race | PNG, MP4, transparent MOV |
 | Video · Explainers | Three Step Process | PNG, MP4, transparent MOV |
-| Video · Reveals | Goo Spawn Title · Goo Spawn Logo | PNG, MP4, transparent MOV |
+| Video · Reveals | Goo Spawn Title · Goo Spawn Logo · Aurora Title | PNG, MP4, transparent MOV |
+| Video · Typography | Kinetic Slam · Mask Reveal · Slot Roll · Line Draw · Marquee Bands · Word Drum | PNG, MP4, transparent MOV |
+| Video · Transitions | Shape Burst · Tile Wipe | MP4, transparent MOV |
+| Video · Product | Product Showcase · Screen Zoom · Prompt Box | PNG, MP4, transparent MOV |
+| Video · Social | Quote Card | PNG, MP4, transparent MOV |
+| Video · Endcards | Follow CTA | PNG, MP4, transparent MOV |
 
 ## Make your own template with AI
 
