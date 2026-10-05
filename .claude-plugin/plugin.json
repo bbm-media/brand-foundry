@@ -1,0 +1,26 @@
+{
+  "name": "brand-foundry",
+  "version": "1.0.0",
+  "description": "Templates your AI agents fill. Branded images, carousels, stat cards, logo reveals and video overlays, rendered on your machine to PNG, MP4 or transparent MOV.",
+  "author": {
+    "name": "Payton Kaleiwahea",
+    "url": "https://x.com/paytkaleiwahea"
+  },
+  "homepage": "https://github.com/bbm-media/brand-foundry",
+  "repository": "https://github.com/bbm-media/brand-foundry",
+  "license": "MIT",
+  "keywords": [
+    "brand",
+    "templates",
+    "design",
+    "social-media",
+    "carousel",
+    "motion-graphics",
+    "video-overlays",
+    "logo-animation",
+    "transparent-video",
+    "content-creation",
+    "hyperframes",
+    "agent-skill"
+  ]
+}

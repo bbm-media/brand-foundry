@@ -1,0 +1,125 @@
+[
+  {
+    "id": "image-to-3d",
+    "kind": "workflow",
+    "title": "Image to reusable 3D asset",
+    "description": "Reconstruct an object from a reference image as editable Three.js code, review it, then reuse the approved model in templates.",
+    "tags": [
+      "3d",
+      "image",
+      "three.js",
+      "product",
+      "model"
+    ],
+    "status": "Integration guide \u2022 not installed or tested by this directory",
+    "source": "https://github.com/img2threejs/img2threejs",
+    "requirements": [
+      "Coding agent with image and browser access",
+      "Upstream setup and model review",
+      "Bundle TypeScript for the browser; wire deterministic animation before importing"
+    ],
+    "instructions": "Read https://github.com/img2threejs/img2threejs and its current setup instructions. Check the installed version and prerequisites before installing anything. Ask me for a reference image and intended result. Create and review a reusable model in a separate working folder. Keep model source, reference provenance, dependencies and review notes together. After I approve the model, adapt a copy to Brand Foundry using docs/TEMPLATE-GUIDE.md. Preserve existing templates. Save a recipe with the source version and output paths. Do not claim integration or installation until verified."
+  },
+  {
+    "id": "camera-3d-captions",
+    "kind": "workflow",
+    "title": "3D camera captions",
+    "description": "Depth-based captions around a speaker, using timed words, a subject matte, and camera movement.",
+    "tags": [
+      "captions",
+      "3d",
+      "video",
+      "talking head",
+      "hyperframes"
+    ],
+    "status": "Integration guide \u2022 footage preparation required",
+    "source": "https://github.com/heygen-com/hyperframes-community-skills/tree/master/skills/camera-3d-captions",
+    "requirements": [
+      "Locked-camera landscape talking-head footage; upstream guide targets 5\u201320 seconds",
+      "Word-level timing, fonts and person matte",
+      "Upstream guide specifies HyperFrames 0.8.62, FFmpeg and Python dependencies; verify compatibility first"
+    ],
+    "instructions": "Inspect the camera-3d-captions skill at https://github.com/heygen-com/hyperframes-community-skills/tree/master/skills/camera-3d-captions. Check its pinned runtime and dependencies against my installation. Ask for footage, word timing and font choices. Prepare and review a short test separately before adapting anything into Brand Foundry. Save reusable styling separately from footage-specific timing and masks. Preserve provenance and record the tested version in a recipe. Do not upgrade the whole studio silently."
+  },
+  {
+    "id": "generative-media",
+    "kind": "workflow",
+    "title": "AI image and video generation",
+    "description": "Use a chosen provider and exact model, review the result, and save the successful prompt and settings as a recipe.",
+    "tags": [
+      "ai",
+      "generation",
+      "background",
+      "image",
+      "video",
+      "minimax",
+      "fal",
+      "venice"
+    ],
+    "status": "Planning workflow \u2022 no generation API connected",
+    "source": "",
+    "requirements": [
+      "Choose a provider and exact model ID; informal model names are not verified",
+      "Provider account and locally configured credentials",
+      "Review cost and output before running a paid request"
+    ],
+    "instructions": "Help me choose an available image or video model through my preferred provider. Verify the exact model ID, input schema and current price in official documentation. Ask for references, aspect ratio, duration if video, and budget. Show the proposed request and estimated cost before a paid generation. Keep credentials in local environment configuration, never in a recipe. Save the reviewed output locally, and save prompt, negative prompt, provider, model/version, settings, seed if supported, reference paths and result paths as a recipe. Use approved artwork in an Brand Foundry template."
+  },
+  {
+    "id": "local-agent",
+    "kind": "connection",
+    "title": "Claude Code / Codex",
+    "description": "A local coding agent can read this directory, use the recipes, and work with the studio files and HTTP API.",
+    "tags": [
+      "agent",
+      "claude",
+      "codex",
+      "local"
+    ],
+    "status": "Manual setup \u2022 connection not detected",
+    "source": "",
+    "requirements": [
+      "Agent access to this checkout and local server"
+    ],
+    "instructions": "Read AGENTS.md and docs/STUDIO-DIRECTORY.md in this checkout. Fetch /api/directory from the running studio for workflows, recipes and template IDs. Inspect current capabilities rather than assuming tools are connected."
+  },
+  {
+    "id": "editing-tools",
+    "kind": "connection",
+    "title": "Premiere Pro / DaVinci Resolve",
+    "description": "Use separately configured editor integrations to place reviewed studio exports on a timeline.",
+    "tags": [
+      "editing",
+      "mcp",
+      "premiere",
+      "resolve",
+      "timeline"
+    ],
+    "status": "External integration \u2022 connection not detected",
+    "source": "",
+    "requirements": [
+      "A separately installed and configured editor integration"
+    ],
+    "instructions": "Read docs/AGENT-WORKFLOW.md. Inspect the connected editor tools and their supported import and timeline operations. Render the requested asset, verify the file, then place it only through the available integration. Report placement only after the editor confirms it."
+  },
+  {
+    "id": "generation-provider",
+    "kind": "connection",
+    "title": "Generation providers",
+    "description": "A place for your future image/video provider connection. This version stores recipes but does not make generation calls or collect API keys.",
+    "tags": [
+      "api",
+      "fal",
+      "venice",
+      "minimax",
+      "image",
+      "video"
+    ],
+    "status": "Not connected \u2022 no paid calls available",
+    "source": "",
+    "requirements": [
+      "Provider selection and API integration are a future phase"
+    ],
+    "instructions": "Follow the AI image and video generation workflow. Verify provider and exact model independently. Never put an API key in the catalog, recipe JSON or public repository."
+  }
+]

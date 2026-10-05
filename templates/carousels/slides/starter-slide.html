@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  STARTER TEMPLATE · carousels / slides
+  Demonstrates: a numbered body slide, an optional image slot (any variable whose
+  id contains image/photo/logo gets an upload button + drag-and-drop), and the
+  NN / total index that a deck builder can drive.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[
+{"id":"secondaryColor","brandKey":"accentSoft","type":"color","label":"Secondary","default":"#5C7CFF"},
+{"id":"brandPaper","brandKey":"paper","type":"color","label":"Background (light theme)","default":"#F6F7F9"},
+{"id":"brandInk","brandKey":"ink","type":"color","label":"Text (light theme)","default":"#16181D"},
+    {"id":"step","type":"string","label":"Step number","default":"1"},
+    {"id":"heading","type":"string","label":"Heading","default":"Make one point per slide"},
+    {"id":"body","type":"string","label":"Body","default":"Keep it to a single idea. The next slide can carry the next one."},
+    {"id":"photoImage","type":"string","label":"Image (optional)","default":"assets/placeholder.svg"},
+    {"id":"index","type":"string","label":"Corner index (blank hides)","default":"02 / 06"},
+    {"id":"handle","brandKey":"handle","type":"string","label":"Handle (blank hides)","default":"@yourhandle"},
+    {"id":"backgroundImage","type":"string","label":"Background image or gradient (optional)","default":""},
+    {"id":"backgroundFit","type":"enum","label":"Background fit","default":"cover","options":[
+      {"value":"cover","label":"Cover"},{"value":"contain","label":"Contain"},{"value":"fill","label":"Stretch"}
+    ]},
+    {"id":"backgroundPosition","type":"enum","label":"Background position","default":"center","options":[
+      {"value":"center","label":"Center"},{"value":"top","label":"Top"},{"value":"bottom","label":"Bottom"}
+    ]},
+    {"id":"backgroundTreatment","type":"enum","label":"Readability wash","default":"none","options":[
+      {"value":"none","label":"None"},{"value":"light","label":"Light"},{"value":"dark","label":"Dark"}
+    ]},
+    {"id":"theme","type":"enum","label":"Theme","default":"light","options":[
+      {"value":"light","label":"Light"},
+      {"value":"dark","label":"Dark"}
+    ]},
+    {"id":"accentColor","brandKey":"accent","type":"color","label":"Accent","default":"#2453FF"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Starter Slide {{LABEL}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Lora:wght@600&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root {
+        position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        --bgColor: var(--brandPaper, #F6F7F9); --textColor: var(--brandInk, #16181D); --cardColor: #FFFFFF;
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans);
+      }
+      #root.dark { --bgColor: #0D0E11; --textColor: #F2F3F5; --cardColor: #16181D; }
+      .background, .background-wash { position: absolute; inset: 0; display: none; }
+      .background { width: 100%; height: 100%; object-fit: var(--backgroundFit, cover); object-position: var(--backgroundPosition, center); }
+      #root.has-bg .background, #root.has-bg .background-wash { display: block; }
+      #root.wash-light .background-wash { background: rgba(246,247,249,.72); }
+      #root.wash-dark .background-wash { background: rgba(13,14,17,.64); }
+      #root::before {
+        content: ""; position: absolute; inset: 0;
+        background-image: linear-gradient(currentColor 1px, transparent 1px),
+                          linear-gradient(90deg, currentColor 1px, transparent 1px);
+        background-size: 54px 54px; opacity: 0.05; z-index: 1;
+      }
+      .topbar { position: absolute; top: 64px; left: 84px; right: 84px; display: flex;
+        align-items: center; justify-content: space-between; font-weight: 700; font-size: 28px; z-index: 2; }
+      .topbar .idx { color: var(--accentColor); font-weight: 800; letter-spacing: 0.06em; }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column;
+        justify-content: center; padding: 150px 84px 96px; box-sizing: border-box; z-index: 2; }
+      .step { font-weight: 900; font-size: 190px; line-height: 0.9; letter-spacing: -0.04em;
+        color: var(--accentColor); }
+      .step::before { content: ""; display: block; width: 92px; height: 8px; border-radius: 4px;
+        background: var(--accentColor); margin-bottom: 32px; }
+      .heading { font-family: var(--serif); font-weight: 600; font-size: 82px; line-height: 1.04;
+        letter-spacing: -0.02em; margin: 26px 0 0; }
+      .body { margin-top: 30px; font-weight: 500; font-size: 42px; line-height: 1.32;
+        color: color-mix(in srgb, var(--textColor) 74%, transparent); }
+      .shot { display: none; margin-top: 36px; border-radius: 22px; overflow: hidden;
+        background: var(--cardColor); border: 2px solid color-mix(in srgb, var(--textColor) 10%, transparent); }
+      #root.hasimg .shot { display: block; }
+      #root.hasimg .step { font-size: 130px; }
+      #root.hasimg .heading { font-size: 62px; }
+      #root.hasimg .body { display: none; }
+      .shot img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
+      html[data-size="sq"] .heading { font-size: 64px; }
+      html[data-size="sq"] .step { font-size: 140px; }
+      html[data-size="st"] .heading { font-size: 92px; }
+    .topbar .idx { color: var(--secondaryColor); }
+</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="starter-slide"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="0">
+      <img class="background" id="background" data-var-src="backgroundImage" alt="" />
+      <div class="background-wash"></div>
+      <div class="topbar">
+        <span id="handle" data-var-text="handle">@yourhandle</span>
+        <span class="idx" id="index" data-var-text="index">02 / 06</span>
+      </div>
+      <section class="stage">
+        <div class="step" data-var-text="step">1</div>
+        <h2 class="heading" data-var-text="heading">Make one point per slide</h2>
+        <p class="body" id="body" data-var-text="body">Keep it to a single idea.</p>
+        <div class="shot"><img id="photo" data-var-src="photoImage" src="assets/placeholder.svg" alt="" /></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      if ((vars.theme || "light") === "dark") root.classList.add("dark");
+      for (const id of ["index", "handle", "body"])
+        if (String(vars[id] ?? "").trim() === "") document.getElementById(id)?.remove();
+      // Swap to the image layout only once a real image replaces the placeholder.
+      const img = String(vars.photoImage ?? "").trim();
+      if (img && !/placeholder/.test(img)) root.classList.add("hasimg");
+      const bg = String(vars.backgroundImage ?? "").trim();
+      if (bg && !/placeholder/.test(bg)) {
+        root.classList.add("has-bg");
+        if (["light", "dark"].includes(vars.backgroundTreatment)) root.classList.add(`wash-${vars.backgroundTreatment}`);
+      } else document.getElementById("background")?.remove();
+    </script>
+  </body>
+</html>

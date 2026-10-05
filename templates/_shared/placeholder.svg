@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <rect width="1600" height="1000" fill="#E8ECF7"/>
+  <g fill="none" stroke="#2453FF" stroke-opacity="0.35" stroke-width="4">
+    <rect x="620" y="368" width="360" height="264" rx="18"/>
+    <circle cx="716" cy="452" r="30"/>
+    <path d="M640 600 L760 480 L840 560 L920 500 L960 540 V612 H640 Z" fill="#2453FF" fill-opacity="0.18" stroke-linejoin="round"/>
+  </g>
+  <text x="800" y="712" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+        font-size="46" font-weight="700" fill="#2453FF" fill-opacity="0.75">Drop an image</text>
+</svg>

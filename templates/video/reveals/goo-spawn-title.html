@@ -1,0 +1,117 @@
+<!doctype html>
+<!--
+  GOO SPAWN TITLE · video / reveals
+  Letters materialize out of one liquid blob. Each line sits inside its own SVG
+  filter: a Gaussian blur welds the glyphs into a single mass, and an alpha
+  threshold (feColorMatrix) re-hardens its edges so the blur reads as liquid
+  instead of haze. The spawn is two seek-safe attribute tweens per line:
+    1. blur  : start -> 0 over the spawn, power4.out (front-loaded)
+    2. edges : hard threshold -> identity, linear, over the last part of the spawn
+  Phase 2 is what stops the final frame from snapping from waxy to crisp.
+  The filter reads alpha, so the transparent MOV export works as-is.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[{"id": "line1", "type": "string", "group": "Content", "label": "Line 1", "default": "Every frame"}, {"id": "line2", "type": "string", "group": "Content", "label": "Line 2 (blank hides)", "default": "counts."}, {"id": "typeScale", "type": "number", "group": "Content", "label": "Type size (%)", "default": 100, "min": 40, "max": 200, "step": 5, "description": "Scales the headline. Long lines still shrink to fit the canvas."}, {"id": "textColor", "brandKey": "ink", "type": "color", "group": "Brand", "label": "Line 1 color", "default": "#16181D"}, {"id": "accentColor", "brandKey": "accent", "type": "color", "group": "Brand", "label": "Line 2 color", "default": "#2453FF"}, {"id": "bgColor", "brandKey": "paper", "type": "color", "group": "Brand", "label": "Background", "default": "#F6F7F9"}, {"id": "headingFont", "type": "font", "group": "Brand", "label": "Heading font", "default": "", "description": "Inherit brand, or choose an installed system font. Heavy faces pool into a thicker liquid; thin faces dissolve instead."}, {"id": "spawnSeconds", "type": "number", "group": "Spawn", "label": "Spawn seconds", "default": 1.2, "min": 0.3, "max": 4, "step": 0.1, "description": "How long the letters take to pull apart. 1.2 seconds matches the reference."}, {"id": "blurPercent", "type": "number", "group": "Spawn", "label": "Blob size (% of type size)", "default": 33, "min": 5, "max": 80, "step": 1, "description": "Starting blur as a share of the font size, so the effect scales with the type. Too high and the letters vanish before they pool."}, {"id": "edgeHardness", "type": "number", "group": "Spawn", "label": "Edge hardness", "default": 20, "min": 4, "max": 40, "step": 1, "description": "How sharply the blob edge is cut. Higher looks tighter and waxier."}, {"id": "edgeCutoff", "type": "number", "group": "Spawn", "label": "Edge cutoff", "default": -8, "min": -20, "max": -1, "step": 0.5, "description": "More negative makes the blob thinner, so letters pinch apart sooner."}, {"id": "releasePercent", "type": "number", "group": "Spawn", "label": "Edge release (% into spawn)", "default": 66, "min": 0, "max": 95, "step": 1, "description": "When the hard edge starts relaxing back to normal text. Keeps the landing soft."}, {"id": "lineStagger", "type": "number", "group": "Spawn", "label": "Line 2 delay (seconds)", "default": 0.15, "min": 0, "max": 2, "step": 0.05}, {"id": "durationSeconds", "type": "number", "group": "Timing", "label": "Total seconds", "default": 4, "min": 2, "max": 120, "step": 0.5}, {"id": "exitSeconds", "type": "number", "group": "Timing", "label": "Exit seconds (0 holds the last frame)", "default": 0, "min": 0, "max": 10, "step": 0.1}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Goo Spawn Title {{LABEL}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&family=Lora:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      #root {
+        position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        background: var(--bgColor);
+      }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 4px; padding: 90px; box-sizing: border-box; }
+      /* The filtered wrapper must hold only glyphs: any fill behind them would
+         defeat the alpha threshold. */
+      .goo { display: block; max-width: 100%; }
+      .line { display: block; font-family: var(--serif); font-weight: 700; font-size: 150px;
+        line-height: 1.02; letter-spacing: -0.02em; text-align: center; white-space: nowrap; }
+      #l1 { color: var(--textColor); }
+      #l2 { color: var(--accentColor); }
+      html[data-size="half"] .line { font-size: 118px; }
+      html[data-size="wide"] .line { font-size: 150px; }
+      .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="goo-spawn-title" data-start="0"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="4" data-duration-var="durationSeconds">
+      <svg class="defs" aria-hidden="true">
+        <filter id="goo1" x="-30%" y="-80%" width="160%" height="260%" color-interpolation-filters="sRGB">
+          <feGaussianBlur id="blur1" in="SourceGraphic" stdDeviation="0" result="blur" />
+          <feColorMatrix id="edge1" in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
+        </filter>
+        <filter id="goo2" x="-30%" y="-80%" width="160%" height="260%" color-interpolation-filters="sRGB">
+          <feGaussianBlur id="blur2" in="SourceGraphic" stdDeviation="0" result="blur" />
+          <feColorMatrix id="edge2" in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
+        </filter>
+      </svg>
+      <section id="stage" class="stage clip" data-start="0" data-duration="4" data-duration-var="durationSeconds" data-track-index="1">
+        <div class="goo" id="g1" style="filter: url(#goo1)"><span class="line" id="l1" data-var-text="line1">Every frame</span></div>
+        <div class="goo" id="g2" style="filter: url(#goo2)"><span class="line" id="l2" data-var-text="line2">counts.</span></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      const root = document.getElementById("root");
+      const clamp = (value, fallback, lo, hi) => {
+        const n = Number(value);
+        return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : fallback));
+      };
+      if (vars.headingFont) root.style.setProperty("--serif", vars.headingFont);
+      if (String(vars.line2 ?? "").trim() === "") document.getElementById("g2").remove();
+
+      // Scale from the per-size base, then auto-fit: shrink both lines together
+      // until the widest one fits.
+      const stage = document.getElementById("stage");
+      const lines = [...document.querySelectorAll(".line")];
+      const base = parseFloat(getComputedStyle(lines[0]).fontSize);
+      const scaled = base * clamp(vars.typeScale, 100, 40, 200) / 100;
+      lines.forEach(l => { l.style.fontSize = scaled + "px"; });
+      const avail = stage.clientWidth - 180;
+      const widest = Math.max(...lines.map(l => l.scrollWidth));
+      if (widest > avail) {
+        const size = parseFloat(getComputedStyle(lines[0]).fontSize) * (avail / widest);
+        lines.forEach(l => { l.style.fontSize = size + "px"; });
+      }
+      const fontPx = parseFloat(getComputedStyle(lines[0]).fontSize);
+
+      const total = clamp(vars.durationSeconds, 4, 2, 120);
+      const exit = Math.min(total * .45, clamp(vars.exitSeconds, 0, 0, 10));
+      const stagger = clamp(vars.lineStagger, .15, 0, 2);
+      const spawn = Math.min(clamp(vars.spawnSeconds, 1.2, .3, 4), Math.max(.3, total - exit - stagger - .1));
+      const blurStart = fontPx * clamp(vars.blurPercent, 33, 5, 80) / 100;
+      const hardness = clamp(vars.edgeHardness, 20, 4, 40);
+      const cutoff = clamp(vars.edgeCutoff, -8, -20, -1);
+      const release = clamp(vars.releasePercent, 66, 0, 95) / 100;
+      const matrix = (a, o) => `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${a} ${o}`;
+
+      root.dataset.posterTime = String(total - exit - .05);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      // fromTo pins both ends, so any frame can be rendered in any order.
+      const spawnLine = (i, at) => {
+        tl.fromTo(`#blur${i}`, { attr: { stdDeviation: blurStart } },
+          { attr: { stdDeviation: 0 }, duration: spawn, ease: "power4.out" }, at);
+        tl.fromTo(`#edge${i}`, { attr: { values: matrix(hardness, cutoff) } },
+          { attr: { values: matrix(1, 0) }, duration: spawn * (1 - release), ease: "none" }, at + spawn * release);
+      };
+      spawnLine(1, 0);
+      if (document.getElementById("g2")) spawnLine(2, stagger);
+      // Exit fades the stage, a different element from the filter tweens.
+      if (exit) tl.to("#stage", { opacity: 0, duration: exit, ease: "none" }, total - exit);
+      tl.to({}, { duration: .001 }, total - .001);
+      window.__timelines["goo-spawn-title"] = tl;
+    </script>
+  </body>
+</html>

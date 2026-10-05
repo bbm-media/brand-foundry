@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: If you use or build on Brand Foundry, please credit it as below.
+title: Brand Foundry
+abstract: >-
+  Templates your AI agents fill. Branded images, carousels and video,
+  rendered locally to PNG, MP4 or transparent MOV and kept in your own library.
+type: software
+authors:
+  - given-names: Payton
+    family-names: Kaleiwahea
+    alias: paytkaleiwahea
+    website: "https://x.com/paytkaleiwahea"
+    affiliation: Business Based Media
+repository-code: "https://github.com/bbm-media/brand-foundry"
+url: "https://bbm.media"
+license: MIT
+version: 1.0.0
+keywords:
+  - agent skill
+  - brand templates
+  - motion graphics
+  - content creation
+  - hyperframes

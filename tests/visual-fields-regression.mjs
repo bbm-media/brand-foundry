@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import puppeteer from 'puppeteer-core';
+import {resolveChrome} from '../chrome.mjs';
+const base=process.env.STUDIO_URL||'http://127.0.0.1:4838';
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'gallery-test-'));
+const file=path.join(temp,'gallery.png');fs.writeFileSync(file,Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=','base64'));
+const browser=await puppeteer.launch({executablePath:resolveChrome(),headless:true});
+try{
+ const page=await browser.newPage();let renders=0;const errors=[];
+ page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.url().endsWith('/api/preview/still'))renders++});
+ await page.setViewport({width:1440,height:1100});await page.goto(base+'/editor.html?t=statics/case-studies/case-study&s=sq');
+ await page.waitForSelector('.image-hotspot');await page.waitForFunction(()=>document.querySelector('#stillPreview').naturalWidth>0);
+ assert.equal(await page.$$('.gallery-card').then(x=>x.length),3);assert.equal(await page.$$('.metric-row').then(x=>x.length),3);assert.equal(await page.$$('.image-hotspot').then(x=>x.length),3);
+ assert(await page.$$eval('.gallery-image img',nodes=>nodes.every(n=>n.complete&&n.naturalWidth>0)));
+ const before=renders;
+ const [chooser]=await Promise.all([page.waitForFileChooser(),page.click('.image-hotspot[aria-label="Replace gallery image 2"]')]);await chooser.accept([file]);
+ await page.waitForFunction(()=>document.querySelector('.gallery-fields img[alt="Gallery image 2"]').src.endsWith('.png'));
+ assert.equal(await page.$$eval('.image-hotspot',nodes=>nodes.every(n=>n.disabled)),true,'Dirty gallery disables old preview targets');
+ await page.$eval('input[aria-label="Result label 1"]',e=>{e.value='Time saved';e.dispatchEvent(new Event('input',{bubbles:true}))});
+ await page.$eval('input[aria-label="Result value 1"]',e=>{e.value='12 hours';e.dispatchEvent(new Event('input',{bubbles:true}))});
+ await new Promise(r=>setTimeout(r,800));assert.equal(renders,before);
+ await page.click('#savePreview');await page.waitForFunction(()=>document.querySelectorAll('.image-hotspot:not(:disabled)').length===3);assert.equal(renders,before+1);
+ const record=await page.evaluate(()=>JSON.parse(localStorage.getItem('asset-studio:saved:statics/case-studies/case-study')));assert(record.metrics.startsWith('Time saved|12 hours'));assert(record.imageList.split('\n')[1].endsWith('.png'));
+ await page.click('button[aria-label="Move earlier gallery image 2"]');await page.click('button[aria-label="Remove gallery image 3"]');assert.equal(await page.$$('.gallery-card').then(x=>x.length),2);
+ const [batch]=await Promise.all([page.waitForFileChooser(),page.evaluate(()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Add images').click())]);await batch.accept([file,file,file,file,file]);
+ await page.waitForFunction(()=>document.querySelectorAll('.gallery-card').length===6);assert(await page.evaluate(()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Add images').disabled));
+ await page.click('button[aria-label="Remove result 3"]');await page.evaluate(()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Add result').click());
+ await page.type('input[aria-label="Result label 3"]','Leads');await page.type('input[aria-label="Result value 3"]','40');
+ await Promise.all([page.waitForNavigation(),page.click('.sz[href$="s=pt"]')]);await page.waitForSelector('.gallery-card');assert.equal(await page.$$('.gallery-card').then(x=>x.length),6);assert.equal(await page.$eval('input[aria-label="Result value 1"]',e=>e.value),'12 hours');
+ await page.click('#savePreview');await page.waitForFunction(()=>document.querySelectorAll('.image-hotspot:not(:disabled)').length===6);
+ const values=await page.evaluate(()=>JSON.parse(localStorage.getItem('asset-studio:saved:statics/case-studies/case-study')));
+ const exported=await fetch(base+'/api/export/png',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:'statics/case-studies/case-study',suffix:'pt',scale:1,variables:values})});const result=await exported.json();assert(exported.ok,JSON.stringify(result));assert(result.asset?.id);console.log('Export verified: '+result.url);
+ await page.setViewport({width:1440,height:1100});
+ await page.$eval('html',e=>e.dataset.theme='dark');
+ await page.screenshot({path:'exports/qa-visual-gallery-editor.png',fullPage:true});
+ // Empty galleries/results are valid and remain empty after reload.
+ while(await page.$('.gallery-card'))await page.click('button[aria-label="Remove gallery image 1"]');
+ while(await page.$('.metric-row'))await page.click('button[aria-label="Remove result 1"]');
+ await page.click('#savePreview');await page.waitForFunction(()=>document.querySelectorAll('.image-hotspot').length===0);await page.reload();await page.waitForSelector('#var-imageList');assert.equal(await page.$$('.gallery-card').then(x=>x.length),0);assert.equal(await page.$$('.metric-row').then(x=>x.length),0);
+ assert.deepEqual(errors,[]);
+ console.log('PASS: preview click upload, real thumbnails, label/value rows, no render on edit, save once, reorder/remove/batch limit, ratio persistence, empty collections and PNG export/index.');
+}finally{await browser.close();}

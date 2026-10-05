@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  STARTER TEMPLATE · statics / posters
+  Copy this file, rename it, and edit. The folder it sits in decides its
+  media type (statics) and category (posters). See docs/TEMPLATE-GUIDE.md.
+-->
+<html data-brand-fonts
+  lang="en"
+  data-composition-variables='[
+{"id":"secondaryColor","brandKey":"accentSoft","type":"color","label":"Secondary","default":"#5C7CFF"},
+{"id":"brandPaper","brandKey":"paper","type":"color","label":"Background (light theme)","default":"#F6F7F9"},
+{"id":"brandInk","brandKey":"ink","type":"color","label":"Text (light theme)","default":"#16181D"},
+    {"id":"kicker","type":"string","label":"Kicker (blank hides)","default":"YOUR KICKER"},
+    {"id":"headline","type":"string","label":"Headline","default":"A headline that earns the scroll"},
+    {"id":"caption","type":"string","label":"Caption (blank hides)","default":"One supporting line underneath."},
+    {"id":"handle","brandKey":"handle","type":"string","label":"Handle (blank hides)","default":"@yourhandle"},
+    {"id":"backgroundImage","type":"string","label":"Background image or gradient (optional)","default":""},
+    {"id":"backgroundFit","type":"enum","label":"Background fit","default":"cover","options":[
+      {"value":"cover","label":"Cover"},{"value":"contain","label":"Contain"},{"value":"fill","label":"Stretch"}
+    ]},
+    {"id":"backgroundPosition","type":"enum","label":"Background position","default":"center","options":[
+      {"value":"center","label":"Center"},{"value":"top","label":"Top"},{"value":"bottom","label":"Bottom"}
+    ]},
+    {"id":"backgroundTreatment","type":"enum","label":"Readability wash","default":"none","options":[
+      {"value":"none","label":"None"},{"value":"light","label":"Light"},{"value":"dark","label":"Dark"}
+    ]},
+    {"id":"theme","type":"enum","label":"Theme","default":"light","options":[
+      {"value":"light","label":"Light"},
+      {"value":"dark","label":"Dark"}
+    ]},
+    {"id":"accentColor","brandKey":"accent","type":"color","label":"Accent","default":"#2453FF"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{WIDTH}}, height={{HEIGHT}}" />
+    <title>Starter Poster {{LABEL}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Lora:wght@600&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; }
+      :root { --serif: "Lora", Georgia, serif; --sans: "Inter", Arial, sans-serif; }
+      /* Theme owns bg/text. Do NOT also expose them as color variables:
+         the preview writes declared vars as inline styles, which would beat
+         these class rules and freeze the theme toggle. */
+      #root {
+        position: relative; width: {{WIDTH}}px; height: {{HEIGHT}}px; overflow: hidden;
+        --bgColor: var(--brandPaper, #F6F7F9); --textColor: var(--brandInk, #16181D);
+        background: var(--bgColor); color: var(--textColor); font-family: var(--sans);
+      }
+      #root.dark { --bgColor: #0D0E11; --textColor: #F2F3F5; }
+      .background, .background-wash { position: absolute; inset: 0; display: none; }
+      .background { width: 100%; height: 100%; object-fit: var(--backgroundFit, cover); object-position: var(--backgroundPosition, center); }
+      #root.has-bg .background, #root.has-bg .background-wash { display: block; }
+      #root.wash-light .background-wash { background: rgba(246,247,249,.72); }
+      #root.wash-dark .background-wash { background: rgba(13,14,17,.64); }
+      #root::before {
+        content: ""; position: absolute; inset: 0;
+        background-image: linear-gradient(currentColor 1px, transparent 1px),
+                          linear-gradient(90deg, currentColor 1px, transparent 1px);
+        background-size: 54px 54px; opacity: 0.05; z-index: 1;
+      }
+      .stage { position: absolute; inset: 0; display: flex; flex-direction: column;
+        justify-content: center; padding: 96px 84px; box-sizing: border-box; z-index: 2; }
+      .kicker { font-weight: 800; font-size: 26px; letter-spacing: 0.16em;
+        text-transform: uppercase; color: var(--accentColor); margin-bottom: 20px; }
+      .headline { font-family: var(--serif); font-weight: 600; font-size: 92px;
+        line-height: 1.04; letter-spacing: -0.02em; margin: 0; }
+      .caption { margin-top: 32px; font-weight: 500; font-size: 40px; line-height: 1.3;
+        color: color-mix(in srgb, var(--textColor) 72%, transparent); }
+      .handle { margin-top: 44px; display: flex; align-items: center; gap: 13px;
+        font-weight: 700; font-size: 30px; }
+      .handle .dot { width: 13px; height: 13px; border-radius: 50%; background: var(--accentColor); }
+      /* Per-ratio tuning. data-size is the size suffix from studio.config.json. */
+      html[data-size="sq"] .headline { font-size: 76px; }
+      html[data-size="st"] .headline { font-size: 104px; }
+    .kicker { color: var(--secondaryColor); }
+</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="starter-poster"
+         data-width="{{WIDTH}}" data-height="{{HEIGHT}}" data-duration="0">
+      <img class="background" id="background" data-var-src="backgroundImage" alt="" />
+      <div class="background-wash"></div>
+      <section class="stage">
+        <div class="kicker" id="kicker" data-var-text="kicker">YOUR KICKER</div>
+        <h1 class="headline" data-var-text="headline">A headline that earns the scroll</h1>
+        <p class="caption" id="caption" data-var-text="caption">One supporting line underneath.</p>
+        <div class="handle" id="handle"><span class="dot"></span><span data-var-text="handle">@yourhandle</span></div>
+      </section>
+    </div>
+    <script>
+      const vars = window.__hyperframes?.getVariables?.() ?? window.__studio?.getVariables?.() ?? {};
+      if ((vars.theme || "light") === "dark") document.getElementById("root").classList.add("dark");
+      const root = document.getElementById("root");
+      const bg = String(vars.backgroundImage ?? "").trim();
+      if (bg && !/placeholder/.test(bg)) {
+        root.classList.add("has-bg");
+        if (["light", "dark"].includes(vars.backgroundTreatment)) root.classList.add(`wash-${vars.backgroundTreatment}`);
+      } else document.getElementById("background")?.remove();
+      for (const id of ["kicker", "caption", "handle"])
+        if (String(vars[id] ?? "").trim() === "") document.getElementById(id).remove();
+    </script>
+  </body>
+</html>

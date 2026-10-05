@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="600" height="240">
+  <!-- Original sample mark for the Goo Spawn Logo starter. Separate shapes show
+       the effect best: they weld into one liquid mass, then pinch apart. -->
+  <g fill="#16181D">
+    <circle cx="96" cy="120" r="72"/>
+    <circle cx="238" cy="120" r="44"/>
+    <rect x="316" y="76" width="200" height="88" rx="44"/>
+    <circle cx="556" cy="120" r="26"/>
+  </g>
+</svg>
