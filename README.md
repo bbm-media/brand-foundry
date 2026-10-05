@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/media/hero-goo-spawn.gif" alt="The words Brand Foundry melting out of two liquid blobs into crisp type, rendered by one of the included templates" width="760">
+  <img src="docs/media/logo/brand-foundry-logo.svg" alt="Brand Foundry logo: a drop of red liquid falling into a square mold" width="96">
 </p>
 
 <h1 align="center">Brand Foundry</h1>
@@ -19,6 +19,10 @@
   <img alt="Node 22 or newer" src="https://img.shields.io/badge/node-22%2B-16181D">
   <a href="CHANGELOG.md"><img alt="Version 1.0.0" src="https://img.shields.io/badge/version-1.0.0-16181D"></a>
   <a href="skills/brand-foundry/SKILL.md"><img alt="Agent Skill for Claude Code and Codex" src="https://img.shields.io/badge/agent%20skill-Claude%20Code%20%C2%B7%20Codex-C4361F"></a>
+</p>
+
+<p align="center">
+  <img src="docs/media/hero-goo-spawn.gif" alt="The words Brand Foundry melting out of two liquid blobs into crisp type, rendered by one of the included templates" width="760">
 </p>
 
 ---

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Brand Foundry</title>
+  <!-- A teardrop falling into a mold: make the template once, fill it forever. -->
+  <rect width="512" height="512" fill="#141210"/>
+  <rect x="114" y="282" width="284" height="116" fill="#C4361F"/>
+  <path fill="#C4361F" d="M256 138C256 138 294 194 294 224A38 38 0 0 1 218 224C218 194 256 138 256 138Z"/>
+  <rect x="96" y="96" width="320" height="320" fill="none" stroke="#F1EDE6" stroke-width="36"/>
+</svg>
