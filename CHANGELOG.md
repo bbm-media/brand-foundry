@@ -5,6 +5,12 @@ Notable changes to Brand Foundry. The format follows
 [Semantic Versioning](https://semver.org/). Add new entries under the newest
 heading until it is released.
 
+## [Unreleased]
+
+### Changed
+
+- New studio skin (BBM Manga Ink): paper background, ink outlines with solid offset shadows, yellow highlighter for the selected item, Anton headings, Inter Tight body and Geist Mono labels. The app icon is recolored to match. Light (paper) is now the default when the OS has no preference. Template brand colors still come from studio.config.json.
+
 ## [1.0.0] - Unreleased
 
 First public release.

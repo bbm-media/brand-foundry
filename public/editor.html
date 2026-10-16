@@ -7,14 +7,13 @@
 <title>Editor · Brand Foundry</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/app.css" />
 <script src="/theme.js"></script>
 <script src="/editor-controls.js"></script>
 <script defer src="/brand-ui.js"></script>
 <style>
   .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 30px 70px; }
-  .back { color: var(--mut); font-size: 13px; font-weight: 600; }
+  .back { color: var(--mut); font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
   .back:hover { color: var(--text); }
   .cols { display: grid; grid-template-columns: minmax(280px, 400px) minmax(300px, 440px);
     gap: 24px; align-items: start; justify-content: center; margin-top: 18px; }
@@ -25,25 +24,25 @@
   .stagewrap { position: sticky; top: 22px; }
   .frame {
     position: relative; border-radius: var(--radius); overflow: hidden;
-    border: 1px solid var(--line); background: var(--panel); box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    border: 3px solid var(--edge); background: var(--panel); box-shadow: 8px 8px 0 var(--shadow);
   }
   .frame iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: top left; }
-  .frame.drag { outline: 3px dashed var(--accent); outline-offset: -3px; }
+  .frame.drag { outline: 3px dashed var(--hi); outline-offset: -3px; }
   .drop { position: absolute; inset: 0; display: none; place-items: center; z-index: 3;
-    background: color-mix(in srgb, var(--bg) 78%, transparent); font-weight: 700; font-size: 14px; }
+    background: color-mix(in srgb, var(--bg) 78%, transparent); font: 400 20px var(--display); text-transform: uppercase; }
   .frame.drag .drop { display: grid; }
-  .meta { color: var(--mut); font-size: 12px; margin-top: 10px; text-align: center; }
+  .meta { color: var(--mut); font: 500 11px var(--mono); letter-spacing: .06em; margin-top: 10px; text-align: center; }
   .err { color: #ff7b72; font-size: 12.5px; margin-top: 10px; white-space: pre-wrap; }
   .err:empty { display: none; }
   /* Actions read as one control panel under the stage rather than a stack of
      full-width slabs, so the preview stays the biggest thing on the page. */
   .stage-actions { margin-top: 12px; }
   .szrow { display: flex; gap: 7px; flex-wrap: wrap; }
-  .sz { font-size: 12px; font-weight: 600; padding: 7px 11px; border-radius: 7px;
-    border: 1px solid var(--line); color: var(--mut); }
-  .sz:hover { border-color: var(--accent); color: var(--text); }
-  .sz.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
-  .setimg { font-size: 11.5px; color: var(--accent); font-weight: 700; }
+  .sz { font: 500 11px var(--mono); letter-spacing: .06em; padding: 7px 11px; border-radius: 6px;
+    border: 2px solid var(--edge); color: var(--text); }
+  .sz:hover { background: var(--hi); color: var(--ink); }
+  .sz.on { background: var(--hi); border-color: var(--edge); color: var(--ink); box-shadow: 3px 3px 0 var(--shadow); }
+  .setimg { font-size: 11.5px; color: var(--text); font-weight: 800; box-shadow: inset 0 -6px 0 var(--hi); }
 </style>
 <script defer src="/studio-nav.js"></script>
 </head>

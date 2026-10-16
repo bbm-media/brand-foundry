@@ -1,12 +1,12 @@
 // Shared light/dark switch. Applied before paint (see the inline snippet in each
 // page's <head>) so there's no flash of the wrong theme on load.
 //
-// Order of precedence: saved choice → OS preference → dark.
+// Order of precedence: saved choice → OS preference → light (the paper look).
 (function () {
   const KEY = "studio-theme";
   const saved = localStorage.getItem(KEY);
-  const osLight = window.matchMedia?.("(prefers-color-scheme: light)").matches;
-  const initial = saved || (osLight ? "light" : "dark");
+  const osDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  const initial = saved || (osDark ? "dark" : "light");
   document.documentElement.dataset.theme = initial;
 
   window.mountThemeSwitch = function (mountId) {
